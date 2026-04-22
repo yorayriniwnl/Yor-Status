@@ -1,0 +1,11 @@
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+process.chdir(require('path').join(__dirname, '..'));
+console.log('🌱 YorStatus Enterprise — Seeding all data...\n');
+console.time('Total');
+require('./seed_core');
+require('./seed_legal');
+require('./seed_news');
+require('./seed_assets');
+require('./seed_timeline_factchecks_polls');
+console.timeEnd('Total');
+console.log('\n✅ Done! Run: npm start');

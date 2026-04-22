@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YorStatus India — Hold Power Accountable</title>
+<meta name="description" content="India's #1 political accountability platform. Track 65+ politicians, party manifestos, state GDP performance, legal records and public approval ratings in real time.">
+<meta property="og:title" content="YorStatus India — Hold Power Accountable">
+<meta property="og:description" content="Real-time tracking of 65+ politicians, legal charges, state GDP rankings and public approval ratings.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="bg3d"></canvas>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-brand"><span class="logo">YorStatus</span><span class="logo-sub">INDIA</span></div>
+  <div class="nav-links" id="navlinks">
+    <a class="nl active" href="#" onclick="return goPage('dashboard',this)">Dashboard</a>
+    <a class="nl" href="#" onclick="return goPage('politicians',this)">Politicians</a>
+    <a class="nl" href="#" onclick="return goPage('parties',this)">Party Manifestos</a>
+    <a class="nl" href="#" onclick="return goPage('states',this)">State Tracker</a>
+    <a class="nl" href="#" onclick="return goPage('legal',this)">Legal Records</a>
+    <a class="nl" href="#" onclick="return goPage('news',this)">News</a>
+    <a class="nl" href="#" onclick="return goPage('approvals',this)">Ratings</a>
+    <a class="nl" href="#" onclick="return goPage('watchlist',this)">Watchlist</a>
+  </div>
+  <div class="nav-right">
+    <button onclick="openSearch()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:5px 14px;color:var(--mut);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.68rem;display:flex;align-items:center;gap:6px">⌕ Search <kbd style="font-size:.52rem;opacity:.5">⌘K</kbd></button>
+    <span class="live-dot"></span><span class="live-txt">Live</span>
+    <span id="navclock" class="navclock"></span>
+    <div id="user-nav-wrap"></div>
+    <button class="burger" onclick="toggleNav()">☰</button>
+  </div>
+</nav>
+
+<div id="app">
+
+<!-- DASHBOARD -->
+<div id="pg-dashboard" class="pg">
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-eye">REAL-TIME POLITICAL ACCOUNTABILITY · INDIA 🇮🇳</div>
+      <h1 class="hero-h">Every Promise.<br>Every Charge.<br>Every Rupee.</h1>
+      <p class="hero-p">Tracking <b id="hc-pols">65</b> politicians · <b id="hc-pr">400+</b> promises · Live ratings · Legal records</p>
+    </div>
+    <div class="hero-stats" id="hero-stats">
+      <div class="hsc"><div class="hsc-n green" style="font-size:1.5rem">—</div><div class="hsc-l">Kept</div></div>
+      <div class="hsc"><div class="hsc-n blue" style="font-size:1.5rem">—</div><div class="hsc-l">Progress</div></div>
+      <div class="hsc"><div class="hsc-n gold" style="font-size:1.5rem">—</div><div class="hsc-l">Pending</div></div>
+      <div class="hsc"><div class="hsc-n red" style="font-size:1.5rem">—</div><div class="hsc-l">Broken</div></div>
+    </div>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-card"><div class="dc-head"><span>🏆 GDP Leaderboard</span><a href="#" onclick="return goPage('states',document.querySelectorAll('.nl')[3])" class="dc-link">All states →</a></div><div id="d-lb"><div class="skeleton-block" style="height:200px"></div></div></div>
+    <div class="dash-card"><div class="dc-head"><span>📊 Party Performance</span></div><div style="position:relative"><canvas id="party-canvas" height="220"></canvas></div></div>
+    <div class="dash-card"><div class="dc-head"><span>⭐ Highest Rated</span><a href="#" onclick="return goPage('approvals',document.querySelectorAll('.nl')[6])" class="dc-link">All ratings →</a></div><div id="d-top"><div class="skeleton-block" style="height:200px"></div></div></div>
+    <div class="dash-card"><div class="dc-head"><span>💔 Most Broken Promises</span></div><div id="d-broken"><div class="skeleton-block" style="height:200px"></div></div></div>
+    <div class="dash-card"><div class="dc-head"><span>⚖ Legal Heat Map</span><a href="#" onclick="return goPage('legal',document.querySelectorAll('.nl')[4])" class="dc-link">All charges →</a></div><div id="d-legal-heat"><div class="skeleton-block" style="height:200px"></div></div></div>
+    <div class="dash-card"><div class="dc-head"><span>📰 Latest News</span><a href="#" onclick="return goPage('news',document.querySelectorAll('.nl')[5])" class="dc-link">All news →</a></div><div id="d-news"><div class="skeleton-block" style="height:200px"></div></div></div>
+  </div>
+</div>
+
+<!-- POLITICIANS -->
+<div id="pg-politicians" class="pg hidden">
+  <div class="pg-hdr"><h1 class="pg-title">Politicians</h1><p class="pg-sub">65 tracked politicians with live term clocks, promise stats, legal records and public approval ratings.</p></div>
+  <div class="ctrl-bar">
+    <div class="sw"><span class="si">⌕</span><input class="srch" id="pol-srch" placeholder="Search name, state, party, role…" oninput="debounce('pols',loadPols)"></div>
+    <div class="stabs" id="pol-tabs">
+      <button class="st active" onclick="setPolTab('pm',this)">PM &amp; Cabinet <span class="tc">26</span></button>
+      <button class="st" onclick="setPolTab('cm',this)">Chief Ministers <span class="tc">31</span></button>
+      <button class="st" onclick="setPolTab('opp',this)">Opposition <span class="tc">8</span></button>
+    </div>
+    <div class="pfs" id="pol-pfs"></div>
+  </div>
+  <div class="rbar" id="pol-rbar">Loading…</div>
+  <div class="grid" id="pol-grid"></div>
+</div>
+
+<!-- PARTIES -->
+<div id="pg-parties" class="pg hidden">
+  <div class="pg-hdr"><h1 class="pg-title">Party Manifestos</h1><p class="pg-sub">Previous term promises vs delivery. Current manifesto tracking. Real-world impact analysis.</p></div>
+  <div class="parties-grid" id="parties-grid"></div>
+</div>
+
+<!-- STATES -->
+<div id="pg-states" class="pg hidden">
+  <div class="pg-hdr"><h1 class="pg-title">State Tracker</h1><p class="pg-sub">GDP growth rankings, governance scores, policy impact analysis and leaderboard for all Indian states.</p></div>
+  <div class="chart-section"><h2 class="sect-title">🏆 GDP Growth Rate Leaderboard (% GSDP)</h2><div class="chart-box"><canvas id="gdp-canvas" height="500"></canvas></div></div>
+  <div class="ctrl-bar" style="margin-top:1rem">
+    <input class="srch no-icon" id="state-srch" placeholder="Search state, CM, party…" oninput="debounce('states',loadStates)" style="flex:1;max-width:300px">
+    <div class="pfs" id="state-pfs"></div>
+    <div class="stabs states-sort">
+      <button class="st active" onclick="setSortStates('gdp',this)">GDP</button>
+      <button class="st" onclick="setSortStates('welfare',this)">Welfare</button>
+      <button class="st" onclick="setSortStates('hdi',this)">HDI</button>
+    </div>
+  </div>
+  <div class="states-grid" id="states-grid"></div>
+</div>
+
+<!-- LEGAL RECORDS -->
+<div id="pg-legal" class="pg hidden">
+  <div class="pg-hdr"><h1 class="pg-title">Legal Records</h1><p class="pg-sub">Criminal charges, financial fraud, civil disputes and special law cases — sourced from court records, election affidavits and public reporting.</p></div>
+  <div id="legal-overview"></div>
+  <div class="ctrl-bar">
+    <div class="sw"><span class="si">⌕</span><input class="srch" id="legal-srch" placeholder="Search charge, case number, politician…" oninput="debounce('legal',loadLegalList)"></div>
+    <div class="pfs" id="legal-status-filters"></div>
+  </div>
+  <div class="ctrl-bar" style="padding-top:.5rem">
+    <div class="pfs" id="legal-cat-filters"></div>
+    <div class="pfs" id="legal-sev-filters"></div>
+  </div>
+  <div class="rbar" id="legal-rbar">Loading…</div>
+  <div id="legal-list" class="legal-list-wrap"></div>
+</div>
+
+<!-- NEWS -->
+<div id="pg-news" class="pg hidden">
+  <div class="pg-hdr"><h1 class="pg-title">News & Media</h1><p class="pg-sub">Latest news articles about politicians, states and accountability. Add articles via the API or Admin panel.</p></div>
+  <div class="ctrl-bar">
+    <div class="pfs">
+      <button class="pf on" onclick="filterNews('',this)">All</button>
+      <button class="pf" onclick="filterNews('positive',this)">Positive</button>
+      <button class="pf" onclick="filterNews('neutral',this)">Neutral</button>
+      <button class="pf" onclick="filterNews('negative',this)">Negative</button>
+    </div>
+  </div>
+  <div class="news-grid" id="news-grid"></div>
+</div>
+
+<!-- APPROVALS -->
+<div id="pg-approvals" class="pg hidden">
+  <div class="pg-hdr"><h1 class="pg-title">Approval Ratings</h1><p class="pg-sub">Rate any politician 1–5 stars. Ratings are stored on the server — your votes count and are shown to everyone.</p></div>
+  <div class="ctrl-bar approval-tabs">
+    <button class="st active" onclick="setApprTab('pm',this)">PM &amp; Cabinet</button>
+    <button class="st" onclick="setApprTab('cm',this)">Chief Ministers</button>
+    <button class="st" onclick="setApprTab('opp',this)">Opposition</button>
+    <input class="srch no-icon" id="appr-srch" placeholder="Search…" oninput="debounce('appr',loadApprovals)" style="max-width:220px">
+  </div>
+  <div class="appr-grid" id="appr-grid"></div>
+</div>
+
+<!-- WATCHLIST -->
+<div id="pg-watchlist" class="pg hidden">
+  <div class="pg-hdr"><h1 class="pg-title">My Watchlist</h1><p class="pg-sub">Politicians you're watching. You'll get notifications when their promises change or new charges are added.</p></div>
+  <div class="watchlist-grid" id="watchlist-grid"></div>
+</div>
+
+<!-- COMPARE -->
+<div id="pg-compare" class="pg hidden">
+  <div class="pg-hdr"><h1 class="pg-title">Compare</h1></div>
+</div>
+
+<!-- ADMIN -->
+<div id="pg-admin" class="pg hidden"></div>
+
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div id="pol-modal" class="overlay" onclick="closeOverlay('pol-modal',event)"><div class="mbox" id="pol-mbox"></div></div>
+<div id="party-modal" class="overlay" onclick="closeOverlay('party-modal',event)"><div class="mbox wide-mbox" id="party-mbox"></div></div>
+<div id="state-modal" class="overlay" onclick="closeOverlay('state-modal',event)"><div class="mbox wide-mbox" id="state-mbox"></div></div>
+
+<!-- AUTH MODAL -->
+<div id="auth-overlay" class="auth-overlay" onclick="closeOverlay('auth-overlay',event)">
+  <div class="auth-box">
+    <button class="auth-close" onclick="closeOverlay('auth-overlay')">✕</button>
+    <div class="auth-logo">YorStatus</div>
+    <div class="auth-sub">India's Political Accountability Platform</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Register</button>
+    </div>
+    <div id="login-form">
+      <div class="auth-error" id="login-err" style="display:none"></div>
+      <div class="auth-form">
+        <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="login-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+        <div class="auth-field"><label class="auth-label">Password</label><input class="auth-input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+        <button class="auth-submit" onclick="doLogin()">Sign In</button>
+      </div>
+    </div>
+    <div id="reg-form" style="display:none">
+      <div class="auth-error" id="reg-err" style="display:none"></div>
+      <div class="auth-form">
+        <div class="auth-field"><label class="auth-label">Username</label><input class="auth-input" id="reg-username" type="text" placeholder="indianvoter123" autocomplete="username"></div>
+        <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="reg-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+        <div class="auth-field"><label class="auth-label">Password (min 8 chars)</label><input class="auth-input" id="reg-pass" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+        <button class="auth-submit" onclick="doRegister()">Create Account</button>
+      </div>
+    </div>
+    <p style="font-size:.65rem;color:var(--hin);font-family:'JetBrains Mono',monospace;margin-top:1rem;line-height:1.6">By registering you can rate politicians, add to watchlist, get notifications and join discussions.</p>
+  </div>
+</div>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notif-panel" onclick="event.stopPropagation()">
+  <div class="notif-head"><h4>Notifications</h4><button class="notif-mark-all" onclick="markAllRead()">Mark all read</button></div>
+  <div id="notif-panel-list"><div style="padding:1.5rem;text-align:center;color:var(--hin);font-size:.78rem">Sign in to see notifications</div></div>
+</div>
+
+<!-- GLOBAL SEARCH OVERLAY -->
+<div id="gsearch-overlay" class="gsearch-overlay" onclick="if(event.target===this)closeSearch()">
+  <div class="gsearch-box">
+    <div class="gsearch-input-wrap">
+      <span class="gsearch-icon">⌕</span>
+      <input class="gsearch-input" id="gsearch-inp" placeholder="Search politicians, states, parties, news…" oninput="runSearch(this.value)">
+      <button class="gsearch-close" onclick="closeSearch()">✕</button>
+    </div>
+    <div class="gsearch-results" id="gsearch-results" style="display:none"></div>
+    <div id="gsearch-trending" class="gsearch-trending"></div>
+  </div>
+</div>
+<script>document.getElementById('gsearch-inp').addEventListener('input',function(){const r=document.getElementById('gsearch-results');if(this.value.length>1)r.style.display='block';else r.style.display='none';});</script>
+
+<!-- COMPARE TRAY -->
+<div class="compare-tray" id="compare-tray">
+  <div class="compare-label">Compare</div>
+  <div class="compare-slots" id="compare-slots"></div>
+  <button class="compare-go-btn" onclick="goCompare()">Compare Now →</button>
+  <button class="compare-clear" onclick="clearCompare()">Clear</button>
+</div>
+
+<!-- CHAT FAB -->
+<button class="chat-fab" onclick="toggleChat()">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  Ask AI
+</button>
+<div class="chat-panel" id="chat-panel">
+  <div class="chat-head">
+    <div class="chat-ai-wrap"><div class="chat-ai-av">AI</div><div><div class="chat-ai-nm">YorStatus AI</div><div class="chat-ai-sub">Live Database · Political Accountability</div></div></div>
+    <div class="chat-live"><span class="live-dot"></span>Live</div>
+  </div>
+  <div class="chat-msgs" id="chat-msgs">
+    <div class="cmsg ai-cmsg"><div class="cmsg-av ai-av">AI</div><div><div class="cmsg-nm">YorStatus AI</div><div class="cmsg-bub">Hello! I'm connected to the live YorStatus database. Ask me about politicians' promises, legal charges, state GDP rankings, party manifesto delivery, or anything about Indian political accountability.</div></div></div>
+  </div>
+  <div class="chat-inp-row">
+    <input class="chat-inp" id="chat-inp" placeholder="Ask about any politician, party or state…">
+    <button class="chat-send" id="chat-send" onclick="sendChat()">↑</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.4/dist/socket.io.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+// Extra wiring for news filter and dashboard news widget
+let _newsSentiment='';
+async function filterNews(s,btn){_newsSentiment=s;document.querySelectorAll('#pg-news .pfs .pf').forEach(b=>b.classList.remove('on'));if(btn)btn.classList.add('on');loadNews();}
+async function loadNews(){const g=document.getElementById('news-grid');if(!g)return;g.innerHTML='<div class="skeleton-block" style="height:300px;margin:2rem"></div>';try{const p={limit:24};if(_newsSentiment)p.sentiment=_newsSentiment;const res=await NewsAPI.list(p);g.innerHTML=(res.data||[]).map((n,i)=>`<a class="news-card" href="${n.source_url||'#'}" target="_blank" rel="noopener" style="animation-delay:${i*.04}s"><div class="news-img">${n.image_url?`<img src="${n.image_url}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=news-img-placeholder>📰</div>'">`:'<div class="news-img-placeholder">📰</div>'}</div><div class="news-body"><div class="news-meta"><span class="news-source">${n.source_name||'Unknown'}</span><span class="news-date">${timeAgo(n.published_at)}</span>${n.sentiment?`<span class="news-sentiment ns-${n.sentiment}">${n.sentiment}</span>`:''}</div><div class="news-headline">${n.headline}</div>${n.summary?`<div class="news-summary">${n.summary.slice(0,120)}…</div>`:''}</div></a>`).join('')||'<div class="no-res">No news yet. Add via Admin panel or API POST /api/news</div>';}catch(e){g.innerHTML='<div class="no-res">Failed to load</div>';}}
+// Load news in dashboard widget
+(async()=>{try{const res=await NewsAPI.list({limit:4});const el=document.getElementById('d-news');if(el)el.innerHTML=(res.data||[]).map(n=>`<div class="lb-row"><div style="flex:1;min-width:0"><a href="${n.source_url||'#'}" target="_blank" rel="noopener" style="font-size:.78rem;color:var(--txt);text-decoration:none;display:block;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n.headline}</a><div style="font-size:.6rem;color:var(--hin);font-family:'JetBrains Mono',monospace">${n.source_name||''} · ${timeAgo(n.published_at)}</div></div>${n.sentiment?`<span class="news-sentiment ns-${n.sentiment}" style="flex-shrink:0;font-size:.55rem;padding:2px 6px;border-radius:8px">${n.sentiment}</span>`:''}</div>`).join('');}catch(e){}})();
+// Close notification panel when clicking elsewhere
+document.addEventListener('click',e=>{if(!e.target.closest('.notif-panel')&&!e.target.closest('[onclick*="notif-panel"]'))document.getElementById('notif-panel')?.classList.remove('open');});
+</script>
+</body>
+</html>

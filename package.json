@@ -1,0 +1,14 @@
+{
+  "name": "yor-enterprise",
+  "private": true,
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "start": "npm --workspace backend start",
+    "dev": "npm --workspace backend run dev",
+    "seed": "npm --workspace backend run seed",
+    "seed:legal": "npm --workspace backend run seed:legal",
+    "seed:news": "npm --workspace backend run seed:news"
+  }
+}
