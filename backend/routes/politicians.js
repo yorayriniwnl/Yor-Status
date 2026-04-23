@@ -6,35 +6,71 @@ const { optionalAuth } = require('../middleware/auth');
 const { cacheMiddleware, del } = require('../services/cache');
 const { notifyWatchers } = require('../services/notifications');
 
+const VALID_TABS = ['pm', 'cm', 'opp'];
+const VALID_PROMISE_STATUSES = ['done', 'prog', 'pend', 'brok'];
+
+function positiveInt(value, fallback, max) {
+  const parsed = parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return Math.min(parsed, max);
+}
+
+function clearPoliticianCaches() {
+  del('cache:/api/politicians*');
+  del('cache:/api/stats*');
+  del('cache:/api/parties*');
+  del('cache:/api/search*');
+}
+
 /* GET /api/politicians?tab=pm&search=&party=&page=1&limit=50 */
 router.get('/', cacheMiddleware(30), (req, res) => {
   const { tab='pm', search='', party='', page=1, limit=50 } = req.query;
-  const offset = (Math.max(1, parseInt(page))-1) * Math.min(100, parseInt(limit));
+  const safeTab = VALID_TABS.includes(tab) ? tab : 'pm';
+  const safePage = positiveInt(page, 1, Number.MAX_SAFE_INTEGER);
+  const safeLimit = positiveInt(limit, 50, 100);
+  const offset = (safePage - 1) * safeLimit;
   let sql = `
     SELECT p.*,
-      COUNT(DISTINCT pr.id)                                           AS total_promises,
-      SUM(CASE WHEN pr.status='done' THEN 1 ELSE 0 END)              AS done_count,
-      SUM(CASE WHEN pr.status='prog' THEN 1 ELSE 0 END)              AS prog_count,
-      SUM(CASE WHEN pr.status='pend' THEN 1 ELSE 0 END)              AS pend_count,
-      SUM(CASE WHEN pr.status='brok' THEN 1 ELSE 0 END)              AS brok_count,
-      ROUND(AVG(r.stars),1)                                           AS avg_rating,
-      COUNT(DISTINCT r.id)                                            AS rating_count,
-      COUNT(DISTINCT lc.id)                                           AS charge_count,
-      SUM(CASE WHEN lc.status='active' THEN 1 ELSE 0 END)            AS active_charges
+      COALESCE(pr.total_promises, 0) AS total_promises,
+      COALESCE(pr.done_count, 0) AS done_count,
+      COALESCE(pr.prog_count, 0) AS prog_count,
+      COALESCE(pr.pend_count, 0) AS pend_count,
+      COALESCE(pr.brok_count, 0) AS brok_count,
+      ROUND(r.avg_rating, 1) AS avg_rating,
+      COALESCE(r.rating_count, 0) AS rating_count,
+      COALESCE(lc.charge_count, 0) AS charge_count,
+      COALESCE(lc.active_charges, 0) AS active_charges
     FROM politicians p
-    LEFT JOIN promises pr ON pr.politician_id = p.id
-    LEFT JOIN ratings  r  ON r.politician_id  = p.id
-    LEFT JOIN legal_charges lc ON lc.politician_id = p.id
+    LEFT JOIN (
+      SELECT politician_id,
+        COUNT(*) AS total_promises,
+        SUM(CASE WHEN status='done' THEN 1 ELSE 0 END) AS done_count,
+        SUM(CASE WHEN status='prog' THEN 1 ELSE 0 END) AS prog_count,
+        SUM(CASE WHEN status='pend' THEN 1 ELSE 0 END) AS pend_count,
+        SUM(CASE WHEN status='brok' THEN 1 ELSE 0 END) AS brok_count
+      FROM promises GROUP BY politician_id
+    ) pr ON pr.politician_id = p.id
+    LEFT JOIN (
+      SELECT politician_id, AVG(stars) AS avg_rating, COUNT(*) AS rating_count
+      FROM ratings WHERE is_flagged=0 GROUP BY politician_id
+    ) r ON r.politician_id = p.id
+    LEFT JOIN (
+      SELECT politician_id,
+        COUNT(*) AS charge_count,
+        SUM(CASE WHEN status='active' THEN 1 ELSE 0 END) AS active_charges
+      FROM legal_charges GROUP BY politician_id
+    ) lc ON lc.politician_id = p.id
     WHERE p.tab = ?`;
-  const params = [tab];
+  const params = [safeTab];
   if (search) { sql += ` AND (p.name LIKE ? OR p.role LIKE ? OR p.state LIKE ? OR p.party LIKE ?)`; const s=`%${search}%`; params.push(s,s,s,s); }
   if (party)  { sql += ` AND p.party = ?`; params.push(party); }
-  sql += ` GROUP BY p.id ORDER BY p.id LIMIT ? OFFSET ?`;
-  params.push(parseInt(limit), offset);
+  const countSql = `SELECT COUNT(*) AS c FROM politicians p ${sql.slice(sql.indexOf('WHERE p.tab = ?'))}`;
+  sql += ` ORDER BY p.id LIMIT ? OFFSET ?`;
+  const total = db.prepare(countSql).get(...params).c;
+  params.push(safeLimit, offset);
   const rows  = db.prepare(sql).all(...params);
-  const total = db.prepare(`SELECT COUNT(*) as c FROM politicians WHERE tab=?`).get(tab).c;
   res.setHeader('X-Total-Count', total);
-  res.json({ data: rows, total, page: parseInt(page) });
+  res.json({ data: rows, total, page: safePage });
 });
 
 /* GET /api/politicians/parties?tab= */
@@ -48,7 +84,7 @@ router.get('/top-rated', cacheMiddleware(60), (req, res) => {
   const rows = db.prepare(`
     SELECT p.id,p.name,p.party,p.twitter,p.initials,p.tab,p.state,
       ROUND(AVG(r.stars),1) AS avg_stars, COUNT(r.id) AS rating_count
-    FROM politicians p LEFT JOIN ratings r ON r.politician_id=p.id
+    FROM politicians p LEFT JOIN ratings r ON r.politician_id=p.id AND r.is_flagged=0
     GROUP BY p.id HAVING rating_count>0 ORDER BY avg_stars DESC LIMIT 10
   `).all();
   res.json(rows);
@@ -62,7 +98,7 @@ router.get('/:id', optionalAuth, (req, res) => {
       COUNT(DISTINCT r.id)  AS rating_count,
       COUNT(DISTINCT lc.id) AS charge_count
     FROM politicians p
-    LEFT JOIN ratings r ON r.politician_id=p.id
+    LEFT JOIN ratings r ON r.politician_id=p.id AND r.is_flagged=0
     LEFT JOIN legal_charges lc ON lc.politician_id=p.id
     WHERE p.id=? GROUP BY p.id
   `).get(req.params.id);
@@ -108,17 +144,19 @@ router.patch('/:id', authenticate, requireAdmin, (req, res) => {
   if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
   updates.push('updated_at=CURRENT_TIMESTAMP'); vals.push(req.params.id);
   const old = db.prepare(`SELECT * FROM politicians WHERE id=?`).get(req.params.id);
+  if (!old) return res.status(404).json({ error: 'Politician not found' });
   db.prepare(`UPDATE politicians SET ${updates.join(',')} WHERE id=?`).run(...vals);
   audit(req, 'update_politician', 'politician', req.params.id, old, req.body);
-  del(`cache:/api/politicians/${req.params.id}`);
+  clearPoliticianCaches();
   res.json({ ok: true });
 });
 
 /* PATCH /api/politicians/:id/promise/:pid — update promise status */
 router.patch('/:id/promise/:pid', authenticate, requireMod, (req, res) => {
   const { status } = req.body;
-  if (!['done','prog','pend','brok'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
-  const old = db.prepare(`SELECT * FROM promises WHERE id=?`).get(req.params.pid);
+  if (!VALID_PROMISE_STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+  const old = db.prepare(`SELECT * FROM promises WHERE id=? AND politician_id=?`).get(req.params.pid, req.params.id);
+  if (!old) return res.status(404).json({ error: 'Promise not found' });
   db.prepare(`UPDATE promises SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND politician_id=?`)
     .run(status, req.params.pid, req.params.id);
   audit(req, 'update_promise', 'promise', req.params.pid, old, { status });
@@ -131,7 +169,7 @@ router.patch('/:id/promise/:pid', authenticate, requireMod, (req, res) => {
       `"${old.title}" changed from ${old.status} → ${status}`);
   }
 
-  del(`cache:/api/politicians/${req.params.id}`);
+  clearPoliticianCaches();
   res.json({ ok: true });
 });
 
@@ -139,10 +177,14 @@ router.patch('/:id/promise/:pid', authenticate, requireMod, (req, res) => {
 router.post('/:id/promise', authenticate, requireAdmin, (req, res) => {
   const { title, status='pend', category } = req.body;
   if (!title || !category) return res.status(400).json({ error: 'title and category required' });
+  if (!VALID_PROMISE_STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+  if (!db.prepare(`SELECT id FROM politicians WHERE id=?`).get(req.params.id)) {
+    return res.status(404).json({ error: 'Politician not found' });
+  }
   const result = db.prepare(`INSERT INTO promises (politician_id,title,status,category) VALUES (?,?,?,?)`)
     .run(req.params.id, title, status, category);
   audit(req, 'add_promise', 'promise', result.lastInsertRowid, null, { title, status });
-  del(`cache:/api/politicians/${req.params.id}`);
+  clearPoliticianCaches();
   res.json({ ok: true, id: result.lastInsertRowid });
 });
 

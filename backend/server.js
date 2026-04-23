@@ -17,7 +17,7 @@ const io = new Server(server, {
 
 global.io = io;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_in_production';
 
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;

@@ -8,6 +8,13 @@ const { notifyWatchers } = require('../services/notifications');
 const STATUSES   = ['active','pending','false','convicted','acquitted','settled','stayed'];
 const SEVERITIES = ['minor','moderate','serious','severe'];
 
+function clearLegalCaches() {
+  del('cache:/api/legal*');
+  del('cache:/api/politicians*');
+  del('cache:/api/stats*');
+  del('cache:/api/search*');
+}
+
 function summary(rows) {
   const s={};
   const byCat={};
@@ -22,6 +29,8 @@ function summary(rows) {
 
 router.get('/', cacheMiddleware(60), (req, res) => {
   const { status, category, severity, politician_id, search } = req.query;
+  if (status && !STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+  if (severity && !SEVERITIES.includes(severity)) return res.status(400).json({ error: 'Invalid severity' });
   let sql = `SELECT lc.*, p.name AS politician_name, p.party, p.twitter, p.initials, p.tab
     FROM legal_charges lc JOIN politicians p ON p.id=lc.politician_id WHERE 1=1`;
   const params = [];
@@ -74,9 +83,11 @@ router.post('/', authenticate, requireMod, (req, res) => {
   const { politician_id, category, status, title, description, case_number, court, filing_agency, date_filed, date_updated, severity, outcome, source_url } = req.body;
   if (!politician_id || !category || !status || !title) return res.status(400).json({ error: 'Missing required fields' });
   if (!STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+  if (severity && !SEVERITIES.includes(severity)) return res.status(400).json({ error: 'Invalid severity' });
+  if (!db.prepare(`SELECT id FROM politicians WHERE id=?`).get(politician_id)) return res.status(404).json({ error: 'Politician not found' });
   const result = db.prepare(`INSERT INTO legal_charges (politician_id,category,status,title,description,case_number,court,filing_agency,date_filed,date_updated,severity,outcome,source_url,added_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(politician_id, category, status, title, description||null, case_number||null, court||null, filing_agency||null, date_filed||null, date_updated||null, severity||null, outcome||null, source_url||null, req.user.id);
   audit(req, 'add_legal', 'legal_charge', result.lastInsertRowid, null, {title,status});
-  del('cache:/api/legal*');
+  clearLegalCaches();
   // Notify watchers of the politician
   const pol = db.prepare(`SELECT name FROM politicians WHERE id=?`).get(politician_id);
   notifyWatchers(politician_id, 'legal_update', `New legal charge — ${pol?.name}`, title);
@@ -86,12 +97,14 @@ router.post('/', authenticate, requireMod, (req, res) => {
 router.patch('/:id', authenticate, requireMod, (req, res) => {
   const { status, outcome, date_updated, severity } = req.body;
   if (status && !STATUSES.includes(status)) return res.status(400).json({ error:'Invalid status' });
+  if (severity && !SEVERITIES.includes(severity)) return res.status(400).json({ error:'Invalid severity' });
   const old = db.prepare(`SELECT * FROM legal_charges WHERE id=?`).get(req.params.id);
+  if (!old) return res.status(404).json({ error: 'Legal charge not found' });
   const updates=[], vals=[];
   if (status)       { updates.push('status=?');       vals.push(status); }
-  if (outcome)      { updates.push('outcome=?');      vals.push(outcome); }
-  if (date_updated) { updates.push('date_updated=?'); vals.push(date_updated); }
-  if (severity)     { updates.push('severity=?');     vals.push(severity); }
+  if (outcome !== undefined)      { updates.push('outcome=?');      vals.push(outcome || null); }
+  if (date_updated !== undefined) { updates.push('date_updated=?'); vals.push(date_updated || null); }
+  if (severity !== undefined)     { updates.push('severity=?');     vals.push(severity || null); }
   if (!updates.length) return res.status(400).json({ error:'Nothing to update' });
   updates.push('updated_at=CURRENT_TIMESTAMP'); vals.push(req.params.id);
   db.prepare(`UPDATE legal_charges SET ${updates.join(',')} WHERE id=?`).run(...vals);
@@ -99,15 +112,16 @@ router.patch('/:id', authenticate, requireMod, (req, res) => {
   if (old && status && old.status !== status) {
     notifyWatchers(old.politician_id, 'legal_update', `Case status changed`, `"${old.title}": ${old.status} → ${status}`);
   }
-  del('cache:/api/legal*');
+  clearLegalCaches();
   res.json({ ok:true });
 });
 
 router.delete('/:id', authenticate, requireAdmin, (req, res) => {
   const old = db.prepare(`SELECT * FROM legal_charges WHERE id=?`).get(req.params.id);
+  if (!old) return res.status(404).json({ error: 'Legal charge not found' });
   db.prepare(`DELETE FROM legal_charges WHERE id=?`).run(req.params.id);
   audit(req, 'delete_legal', 'legal_charge', req.params.id, old);
-  del('cache:/api/legal*');
+  clearLegalCaches();
   res.json({ ok:true });
 });
 

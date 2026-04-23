@@ -18,7 +18,7 @@ router.get('/', cacheMiddleware(30), (req, res) => {
   const topRated = db.prepare(`
     SELECT p.id,p.name,p.role,p.state,p.party,p.twitter,p.initials,p.tab,
       ROUND(AVG(r.stars),1) as avg_stars
-    FROM politicians p LEFT JOIN ratings r ON r.politician_id=p.id
+    FROM politicians p LEFT JOIN ratings r ON r.politician_id=p.id AND r.is_flagged=0
     GROUP BY p.id ORDER BY avg_stars DESC NULLS LAST LIMIT 6
   `).all();
   const mostBroken = db.prepare(`

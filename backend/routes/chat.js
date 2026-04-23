@@ -8,18 +8,32 @@ const router = express.Router();
 function buildContext() {
   const polSummary = db.prepare(`
     SELECT p.id, p.name, p.party, p.tab, p.state,
-      SUM(CASE WHEN pr.status='done' THEN 1 ELSE 0 END) as done,
-      SUM(CASE WHEN pr.status='prog' THEN 1 ELSE 0 END) as prog,
-      SUM(CASE WHEN pr.status='pend' THEN 1 ELSE 0 END) as pend,
-      SUM(CASE WHEN pr.status='brok' THEN 1 ELSE 0 END) as brok,
-      ROUND(AVG(r.stars), 2) as avg_rating,
-      COUNT(DISTINCT lc.id) as total_charges,
-      SUM(CASE WHEN lc.status='active' THEN 1 ELSE 0 END) as active_charges
+      COALESCE(pr.done, 0) as done,
+      COALESCE(pr.prog, 0) as prog,
+      COALESCE(pr.pend, 0) as pend,
+      COALESCE(pr.brok, 0) as brok,
+      ROUND(r.avg_rating, 2) as avg_rating,
+      COALESCE(lc.total_charges, 0) as total_charges,
+      COALESCE(lc.active_charges, 0) as active_charges
     FROM politicians p
-    LEFT JOIN promises pr ON pr.politician_id = p.id
-    LEFT JOIN ratings r ON r.politician_id = p.id
-    LEFT JOIN legal_charges lc ON lc.politician_id = p.id
-    GROUP BY p.id
+    LEFT JOIN (
+      SELECT politician_id,
+        SUM(CASE WHEN status='done' THEN 1 ELSE 0 END) as done,
+        SUM(CASE WHEN status='prog' THEN 1 ELSE 0 END) as prog,
+        SUM(CASE WHEN status='pend' THEN 1 ELSE 0 END) as pend,
+        SUM(CASE WHEN status='brok' THEN 1 ELSE 0 END) as brok
+      FROM promises GROUP BY politician_id
+    ) pr ON pr.politician_id = p.id
+    LEFT JOIN (
+      SELECT politician_id, AVG(stars) as avg_rating
+      FROM ratings WHERE is_flagged=0 GROUP BY politician_id
+    ) r ON r.politician_id = p.id
+    LEFT JOIN (
+      SELECT politician_id,
+        COUNT(*) as total_charges,
+        SUM(CASE WHEN status='active' THEN 1 ELSE 0 END) as active_charges
+      FROM legal_charges GROUP BY politician_id
+    ) lc ON lc.politician_id = p.id
   `).all();
 
   const stateSummary = db.prepare(`
@@ -31,8 +45,8 @@ function buildContext() {
 
   const legalSummary = db.prepare(`
     SELECT COUNT(*) as total,
-      SUM(CASE WHEN status='active' THEN 1 ELSE 0 END) as active,
-      SUM(CASE WHEN status='convicted' THEN 1 ELSE 0 END) as convicted
+      COALESCE(SUM(CASE WHEN status='active' THEN 1 ELSE 0 END), 0) as active,
+      COALESCE(SUM(CASE WHEN status='convicted' THEN 1 ELSE 0 END), 0) as convicted
     FROM legal_charges
   `).get();
 

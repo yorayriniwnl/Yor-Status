@@ -9,7 +9,7 @@ router.get('/', authenticate, (req, res) => {
       ROUND(AVG(r.stars),1) AS avg_rating
     FROM watchlist w
     JOIN politicians p ON p.id=w.politician_id
-    LEFT JOIN ratings r ON r.politician_id=p.id
+    LEFT JOIN ratings r ON r.politician_id=p.id AND r.is_flagged=0
     WHERE w.user_id=? GROUP BY w.id ORDER BY w.created_at DESC
   `).all(req.user.id);
   res.json({ data: items });

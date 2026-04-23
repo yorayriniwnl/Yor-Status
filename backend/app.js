@@ -78,6 +78,10 @@ function createApp(options = {}) {
     });
   });
 
+  app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'API route not found' });
+  });
+
   if (serveUploads) {
     app.use('/uploads', express.static(UPLOAD_DIR));
   }
@@ -90,8 +94,16 @@ function createApp(options = {}) {
   }
 
   app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+      return res.status(400).json({ error: 'Invalid JSON body' });
+    }
+
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({ error: 'File too large' });
+    }
+
+    if (err.message === 'File type not allowed') {
+      return res.status(400).json({ error: err.message });
     }
 
     console.error('[ERROR]', err.message);

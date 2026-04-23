@@ -2,10 +2,15 @@ const express = require('express');
 const router  = express.Router();
 const db      = require('../db');
 const { authenticate, requireMod } = require('../middleware/auth');
-const { cacheMiddleware } = require('../services/cache');
+const { cacheMiddleware, del } = require('../services/cache');
 
 const VERDICTS = ['true','mostly_true','half_true','mostly_false','false','unverifiable'];
 const VERDICT_COLORS = { true:'#00FF87', mostly_true:'#4ADE80', half_true:'#FFD700', mostly_false:'#FB923C', false:'#FF4466', unverifiable:'#6B7A8D' };
+
+function clearFactcheckCaches() {
+  del('cache:/api/factcheck*');
+  del('cache:/api/politicians*');
+}
 
 router.get('/:politician_id', cacheMiddleware(120), (req, res) => {
   const rows = db.prepare(`SELECT * FROM fact_checks WHERE politician_id=? ORDER BY checked_date DESC`).all(req.params.politician_id);
@@ -26,7 +31,9 @@ router.post('/', authenticate, requireMod, (req, res) => {
   const { politician_id, claim_text, verdict, explanation, source_url, checked_by, checked_date } = req.body;
   if (!politician_id || !claim_text || !verdict) return res.status(400).json({ error: 'Missing required fields' });
   if (!VERDICTS.includes(verdict)) return res.status(400).json({ error: 'Invalid verdict' });
+  if (!db.prepare(`SELECT id FROM politicians WHERE id=?`).get(politician_id)) return res.status(404).json({ error: 'Politician not found' });
   const result = db.prepare(`INSERT INTO fact_checks (politician_id,claim_text,verdict,explanation,source_url,checked_by,checked_date) VALUES (?,?,?,?,?,?,?)`).run(politician_id, claim_text, verdict, explanation||null, source_url||null, checked_by||req.user.username, checked_date || new Date().toISOString().slice(0,10));
+  clearFactcheckCaches();
   res.json({ ok: true, id: result.lastInsertRowid });
 });
 
@@ -35,10 +42,12 @@ router.patch('/:id', authenticate, requireMod, (req, res) => {
   if (verdict && !VERDICTS.includes(verdict)) return res.status(400).json({ error: 'Invalid verdict' });
   const updates=[], vals=[];
   if (verdict) { updates.push('verdict=?'); vals.push(verdict); }
-  if (explanation) { updates.push('explanation=?'); vals.push(explanation); }
+  if (explanation !== undefined) { updates.push('explanation=?'); vals.push(explanation || null); }
   if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
+  if (!db.prepare(`SELECT id FROM fact_checks WHERE id=?`).get(req.params.id)) return res.status(404).json({ error: 'Fact check not found' });
   vals.push(req.params.id);
   db.prepare(`UPDATE fact_checks SET ${updates.join(',')} WHERE id=?`).run(...vals);
+  clearFactcheckCaches();
   res.json({ ok: true });
 });
 

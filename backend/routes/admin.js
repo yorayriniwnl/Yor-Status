@@ -6,18 +6,26 @@ const { authenticate, requireAdmin, requireMod, audit } = require('../middleware
 /* All admin routes require authentication */
 router.use(authenticate);
 
+function positiveInt(value, fallback, max) {
+  const parsed = parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return Math.min(parsed, max);
+}
+
 /* GET /api/admin/users */
 router.get('/users', requireAdmin, (req, res) => {
   const { search='', role='', page=1, limit=50 } = req.query;
-  const offset = (Math.max(1,parseInt(page))-1)*parseInt(limit);
+  const safePage = positiveInt(page, 1, Number.MAX_SAFE_INTEGER);
+  const safeLimit = positiveInt(limit, 50, 100);
+  const offset = (safePage - 1) * safeLimit;
   let sql = `SELECT id,username,email,role,display_name,is_verified,is_banned,last_login,created_at FROM users WHERE 1=1`;
   const params = [];
   if (search) { sql += ` AND (username LIKE ? OR email LIKE ?)`; const s=`%${search}%`; params.push(s,s); }
   if (role) { sql += ` AND role=?`; params.push(role); }
-  sql += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`; params.push(parseInt(limit), offset);
+  const total = db.prepare(`SELECT COUNT(*) as c FROM users WHERE 1=1${sql.split('WHERE 1=1')[1]}`).get(...params).c;
+  sql += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`; params.push(safeLimit, offset);
   const rows  = db.prepare(sql).all(...params);
-  const total = db.prepare(`SELECT COUNT(*) as c FROM users`).get().c;
-  res.json({ data: rows, total });
+  res.json({ data: rows, total, page: safePage });
 });
 
 /* PATCH /api/admin/users/:id */
@@ -29,6 +37,7 @@ router.patch('/users/:id', requireAdmin, (req, res) => {
   if (ban_reason !== undefined) { updates.push('ban_reason=?'); vals.push(ban_reason); }
   if (is_verified !== undefined) { updates.push('is_verified=?'); vals.push(is_verified ? 1:0); }
   if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
+  if (!db.prepare(`SELECT id FROM users WHERE id=?`).get(req.params.id)) return res.status(404).json({ error: 'User not found' });
   vals.push(req.params.id);
   db.prepare(`UPDATE users SET ${updates.join(',')} WHERE id=?`).run(...vals);
   audit(req, 'admin_update_user', 'user', req.params.id, null, req.body);
@@ -48,14 +57,16 @@ router.get('/flags', requireMod, (req, res) => {
 
 /* PATCH /api/admin/comments/:id/remove */
 router.patch('/comments/:id/remove', requireMod, (req, res) => {
-  db.prepare(`UPDATE comments SET is_removed=1, updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(req.params.id);
+  const result = db.prepare(`UPDATE comments SET is_removed=1, updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(req.params.id);
+  if (!result.changes) return res.status(404).json({ error: 'Comment not found' });
   audit(req, 'remove_comment', 'comment', req.params.id);
   res.json({ ok: true });
 });
 
 /* PATCH /api/admin/comments/:id/restore */
 router.patch('/comments/:id/restore', requireMod, (req, res) => {
-  db.prepare(`UPDATE comments SET is_removed=0, is_flagged=0 WHERE id=?`).run(req.params.id);
+  const result = db.prepare(`UPDATE comments SET is_removed=0, is_flagged=0 WHERE id=?`).run(req.params.id);
+  if (!result.changes) return res.status(404).json({ error: 'Comment not found' });
   res.json({ ok: true });
 });
 

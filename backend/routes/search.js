@@ -6,11 +6,15 @@ const { cacheMiddleware } = require('../services/cache');
 
 router.get('/', cacheMiddleware(15), (req, res) => {
   const { q = '', type = 'all' } = req.query;
-  if (!q || q.length < 2) return res.status(400).json({ error: 'Query too short (min 2 chars)' });
-  const pattern = `%${q}%`;
+  const query = typeof q === 'string' ? q.trim() : '';
+  const searchType = typeof type === 'string' ? type : 'all';
+  const allowedTypes = ['all', 'politicians', 'parties', 'states', 'news', 'legal'];
+  if (!query || query.length < 2) return res.status(400).json({ error: 'Query too short (min 2 chars)' });
+  if (!allowedTypes.includes(searchType)) return res.status(400).json({ error: 'Invalid search type' });
+  const pattern = `%${query}%`;
   const results = { politicians: [], parties: [], states: [], news: [], legal: [] };
 
-  if (type === 'all' || type === 'politicians') {
+  if (searchType === 'all' || searchType === 'politicians') {
     results.politicians = db.prepare(`
       SELECT p.id, p.name, p.role, p.state, p.party, p.twitter, p.initials, p.tab,
         COUNT(pr.id) as total_promises
@@ -19,16 +23,16 @@ router.get('/', cacheMiddleware(15), (req, res) => {
       GROUP BY p.id ORDER BY p.name LIMIT 8
     `).all(pattern, pattern, pattern);
   }
-  if (type === 'all' || type === 'parties') {
+  if (searchType === 'all' || searchType === 'parties') {
     results.parties = db.prepare(`SELECT slug,name,full_name,color,seats_2024 FROM parties WHERE name LIKE ? OR full_name LIKE ? ORDER BY seats_2024 DESC LIMIT 4`).all(pattern, pattern);
   }
-  if (type === 'all' || type === 'states') {
+  if (searchType === 'all' || searchType === 'states') {
     results.states = db.prepare(`SELECT id,name,cm_name,party,gdp_growth,rank_gdp FROM states WHERE name LIKE ? OR cm_name LIKE ? OR party LIKE ? ORDER BY rank_gdp LIMIT 6`).all(pattern, pattern, pattern);
   }
-  if (type === 'all' || type === 'news') {
+  if (searchType === 'all' || searchType === 'news') {
     results.news = db.prepare(`SELECT id,headline,source_name,published_at,sentiment FROM news_articles WHERE headline LIKE ? OR summary LIKE ? ORDER BY published_at DESC LIMIT 6`).all(pattern, pattern);
   }
-  if (type === 'all' || type === 'legal') {
+  if (searchType === 'all' || searchType === 'legal') {
     results.legal = db.prepare(`
       SELECT lc.id, lc.title, lc.category, lc.status, lc.severity, p.name AS politician_name, p.party
       FROM legal_charges lc JOIN politicians p ON p.id=lc.politician_id
@@ -38,8 +42,8 @@ router.get('/', cacheMiddleware(15), (req, res) => {
 
   const total = Object.values(results).reduce((a,v)=>a+v.length,0);
   // Log search
-  try { db.prepare(`INSERT INTO search_logs (query,results,session_id) VALUES (?,?,?)`).run(q, total, req.headers['x-session-id']||null); } catch(e){}
-  res.json({ q, total, results });
+  try { db.prepare(`INSERT INTO search_logs (query,results,session_id) VALUES (?,?,?)`).run(query, total, req.headers['x-session-id']||null); } catch(e){}
+  res.json({ q: query, total, results });
 });
 
 // Trending searches
