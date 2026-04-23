@@ -96,7 +96,7 @@ function renderUserNav(){
       <div class="user-menu-wrap">
         <button class="user-btn" onclick="toggleUserMenu()">
           <div class="user-avatar">${(CURRENT_USER.display_name||CURRENT_USER.username||'?')[0].toUpperCase()}</div>
-          <span>${CURRENT_USER.display_name||CURRENT_USER.username}</span>
+          <span class="user-btn-name">${CURRENT_USER.display_name||CURRENT_USER.username}</span>
           <span id="notif-badge" class="ud-notif-badge" style="display:none">0</span>
         </button>
         <div class="user-dropdown" id="user-dropdown">
