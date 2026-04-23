@@ -1,6 +1,5 @@
 const express  = require('express');
 const bcrypt   = require('bcryptjs');
-const { v4: uuid } = require('uuid');
 const router   = express.Router();
 const db       = require('../db');
 const { signToken, authenticate, audit } = require('../middleware/auth');

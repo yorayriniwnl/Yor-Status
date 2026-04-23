@@ -24,9 +24,11 @@
 
 /* ── SOCKET.IO ── */
 let socket;
+const SOCKETS_ENABLED = ['127.0.0.1','localhost'].includes(window.location.hostname);
 function initSocket(){
-  if(!window.io)return;
+  if(!SOCKETS_ENABLED||!window.io)return;
   socket=io({auth:{token:AUTH_TOKEN||''}});
+  socket.on('connect_error',()=>{socket?.disconnect();});
   socket.on('notification',(n)=>{showToast('🔔 '+n.title,'info');updateNotifBadge();});
   socket.on('rating:update',(d)=>{document.querySelectorAll(`.rating-live-${d.politician_id}`).forEach(el=>{el.textContent=d.avg_stars?`${d.avg_stars}★ (${d.total})`:'—';});});
   socket.on('comment:new',(c)=>{const box=document.getElementById(`comments-live-${c.entity_type}-${c.entity_id}`);if(box){const d=document.createElement('div');d.innerHTML=commentHTML(c,true);box.prepend(d.firstChild);}});

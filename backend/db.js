@@ -1,13 +1,31 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs   = require('fs');
+const {
+  IS_SERVERLESS,
+  RUNTIME_DB_PATH,
+  SOURCE_DB_PATH,
+  ensureDirSync,
+} = require('./runtime');
 
-const DB_PATH = path.join(__dirname, 'data', 'yorstatus.db');
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+function ensureDatabasePath() {
+  ensureDirSync(path.dirname(RUNTIME_DB_PATH));
 
-const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
+  if (!IS_SERVERLESS || fs.existsSync(RUNTIME_DB_PATH)) {
+    return;
+  }
+
+  if (fs.existsSync(SOURCE_DB_PATH)) {
+    fs.copyFileSync(SOURCE_DB_PATH, RUNTIME_DB_PATH);
+  }
+}
+
+ensureDatabasePath();
+
+const db = new Database(RUNTIME_DB_PATH);
+db.pragma(IS_SERVERLESS ? 'journal_mode = DELETE' : 'journal_mode = WAL');
 db.pragma('foreign_keys = ON');
+db.pragma('busy_timeout = 5000');
 db.pragma('cache_size = -64000'); // 64MB cache
 
 db.exec(`
@@ -395,3 +413,4 @@ CREATE INDEX IF NOT EXISTS idx_users_email      ON users(email);
 `);
 
 module.exports = db;
+module.exports.DB_PATH = RUNTIME_DB_PATH;

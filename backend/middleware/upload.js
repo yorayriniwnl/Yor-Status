@@ -1,17 +1,16 @@
 // ── middleware/upload.js ──
+const crypto = require('crypto');
 const multer = require('multer');
 const path   = require('path');
-const fs     = require('fs');
-const { v4: uuid } = require('uuid');
+const { UPLOAD_DIR, ensureDirSync } = require('../runtime');
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'uploads');
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+ensureDirSync(UPLOAD_DIR);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename:    (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, uuid() + ext);
+    cb(null, crypto.randomUUID() + ext);
   }
 });
 

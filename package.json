@@ -5,6 +5,7 @@
     "backend"
   ],
   "scripts": {
+    "build": "node scripts/build.js",
     "start": "npm --workspace backend start",
     "dev": "npm --workspace backend run dev",
     "seed": "npm --workspace backend run seed",

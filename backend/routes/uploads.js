@@ -3,7 +3,9 @@ const router  = express.Router();
 const db      = require('../db');
 const upload  = require('../middleware/upload');
 const { authenticate } = require('../middleware/auth');
+const fs      = require('fs');
 const path    = require('path');
+const { UPLOAD_DIR } = require('../runtime');
 
 router.post('/', authenticate, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
@@ -12,7 +14,17 @@ router.post('/', authenticate, upload.single('file'), (req, res) => {
     INSERT INTO uploads (filename, original_name, mimetype, size_bytes, entity_type, entity_id, uploaded_by)
     VALUES (?,?,?,?,?,?,?)
   `).run(req.file.filename, req.file.originalname, req.file.mimetype, req.file.size, entity_type||null, entity_id||null, req.user.id);
-  res.json({ ok: true, id: result.lastInsertRowid, filename: req.file.filename, url: `/uploads/${req.file.filename}` });
+  res.json({ ok: true, id: result.lastInsertRowid, filename: req.file.filename, url: `/api/uploads/file/${req.file.filename}` });
+});
+
+router.get('/file/:filename', (req, res) => {
+  const filename = path.basename(req.params.filename);
+  if (filename !== req.params.filename) return res.status(400).json({ error: 'Invalid filename' });
+
+  const filePath = path.resolve(UPLOAD_DIR, filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+
+  res.sendFile(filePath);
 });
 
 router.get('/', authenticate, (req, res) => {
