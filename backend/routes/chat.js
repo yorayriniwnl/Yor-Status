@@ -61,7 +61,7 @@ function buildSystemPrompt(context) {
     promiseMap[item.status] = item.c;
   });
 
-  return `You are YorStatus AI - India's political accountability assistant. You have access to live data from the app database.
+  return `You are Yor Votes AI - India's political accountability assistant. You have access to live data from the app database.
 
 LIVE DATA (${new Date().toLocaleDateString('en-IN')}):
 Promise Statistics: Done=${promiseMap.done || 0} | In Progress=${promiseMap.prog || 0} | Pending=${promiseMap.pend || 0} | Broken=${promiseMap.brok || 0}
@@ -120,7 +120,7 @@ function buildFallbackReply(messages, context) {
     ? context.topRated.map((item) => `${item.name} (${item.avg_rating}/5)`).join(', ')
     : 'no public ratings yet';
 
-  return `YorStatus currently tracks ${context.polSummary.length} politicians, ${promiseMap.done || 0} kept promises, ${promiseMap.prog || 0} promises in progress, ${promiseMap.pend || 0} pending promises, and ${promiseMap.brok || 0} broken promises. The platform also includes ${context.legalSummary.total} legal records and a full state GDP tracker. Top currently rated politicians are ${topRatedSummary}. Ask about a politician, party, state, GDP ranking, or legal record for a more specific answer.`;
+  return `Yor Votes currently tracks ${context.polSummary.length} politicians, ${promiseMap.done || 0} kept promises, ${promiseMap.prog || 0} promises in progress, ${promiseMap.pend || 0} pending promises, and ${promiseMap.brok || 0} broken promises. The platform also includes ${context.legalSummary.total} legal records and a full state GDP tracker. Top currently rated politicians are ${topRatedSummary}. Ask about a politician, party, state, GDP ranking, or legal record for a more specific answer.`;
 }
 
 router.post('/', async (req, res) => {

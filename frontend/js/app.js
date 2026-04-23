@@ -48,7 +48,25 @@ setInterval(()=>{
   document.querySelectorAll('.clk-v').forEach(el=>el.textContent=elapsedStr(el.dataset.ts));
   document.querySelectorAll('.mclk').forEach(el=>el.textContent=elapsedStr(el.dataset.ts));
 },1000);
-function elapsedStr(ts){const d=Math.floor((Date.now()-new Date(ts))/1000);return`${Math.floor(d/86400)}d ${Math.floor((d%86400)/3600)}h ${Math.floor((d%3600)/60)}m ${d%60}s`;}
+function elapsedStr(ts){
+  const start=new Date(ts),now=new Date();
+  if(Number.isNaN(start.getTime()))return'--';
+  if(start>=now)return'0d 0h 0m 0s';
+  let years=now.getFullYear()-start.getFullYear();
+  const anniversary=new Date(start);
+  anniversary.setFullYear(start.getFullYear()+years);
+  if(anniversary>now){
+    years--;
+    anniversary.setFullYear(start.getFullYear()+years);
+  }
+  const d=Math.floor((now-anniversary)/1000);
+  const days=Math.floor(d/86400);
+  const hours=Math.floor((d%86400)/3600);
+  const mins=Math.floor((d%3600)/60);
+  const secs=d%60;
+  return`${years>0?`${years}y `:''}${days}d ${hours}h ${mins}m ${secs}s`;
+}
+function servingSinceTs(item){return item?.serving_since||item?.term_start;}
 function pctTerm(ts,te){const n=Date.now(),s=new Date(ts).getTime(),e=new Date(te).getTime();return Math.min(100,Math.max(0,Math.round((n-s)/(e-s)*100)));}
 function fmtDate(d){return new Date(d).toLocaleDateString('en-IN',{month:'short',year:'numeric'});}
 function fmtFull(d){return new Date(d).toLocaleDateString('en-IN',{dateStyle:'medium'});}
@@ -140,7 +158,7 @@ async function doRegister(){
   const email=document.getElementById('reg-email').value;
   const pass=document.getElementById('reg-pass').value;
   const errEl=document.getElementById('reg-err');
-  try{const r=await AuthAPI.register({username,email,password:pass});if(!r)return;setAuth(r.token,r.user);closeOverlay('auth-overlay');renderUserNav();initSocket();showToast(`Welcome to YorStatus, ${r.user.username}!`);}
+  try{const r=await AuthAPI.register({username,email,password:pass});if(!r)return;setAuth(r.token,r.user);closeOverlay('auth-overlay');renderUserNav();initSocket();showToast(`Welcome to Yor Votes, ${r.user.username}!`);}
   catch(e){errEl.textContent=e.message;errEl.style.display='block';}
 }
 function doLogout(){logout();renderUserNav();showToast('Signed out');socket?.disconnect();}
@@ -286,7 +304,7 @@ async function loadPols(){
   }catch(e){if(grid)grid.innerHTML='<div class="no-res">Failed to load. Is the server running?</div>';showToast(e.message,'error');}
 }
 function polCardHTML(p,idx){
-  const col=pc(p.party);const pct_=pctTerm(p.term_start,p.term_end);const gr=p.avg_rating||0;const apprPct=Math.round(gr/5*100);const delay=idx*.04;
+  const col=pc(p.party);const pct_=pctTerm(p.term_start,p.term_end);const gr=p.avg_rating||0;const apprPct=Math.round(gr/5*100);const delay=idx*.04;const sinceTs=servingSinceTs(p);
   const ring=`background:conic-gradient(from 0deg,${col},#060D1E 35%,${col} 65%,#060D1E,${col})`;
   return`<div class="pol-card" style="animation-delay:${delay}s">
     <div class="pc-strip" style="background:${col}"></div>
@@ -295,10 +313,10 @@ function polCardHTML(p,idx){
       <div class="pc-meta"><div class="pc-name">${esc(p.name)}</div><div class="pc-role">${esc(p.role)}</div><div class="pc-state">${esc(p.state)}</div><span class="pbadge" style="background:${col}18;color:${col};border:1px solid ${col}28">${p.party}</span></div>
     </div>
     <div class="pc-clock" onclick="openPolModal(${p.id})">
-      <div class="clk-lbl">Time in office</div>
-      <div class="clk-val clk-v" data-ts="${p.term_start}">${elapsedStr(p.term_start)}</div>
+      <div class="clk-lbl">Serving Since</div>
+      <div class="clk-val clk-v" data-ts="${sinceTs}">${elapsedStr(sinceTs)}</div>
       <div class="tbar"><div class="tbar-f" style="width:${pct_}%"></div></div>
-      <div class="tdates"><span>${fmtDate(p.term_start)}</span><span>${pct_}%</span><span>${fmtDate(p.term_end)}</span></div>
+      <div class="tdates"><span>${fmtDate(p.term_start)}</span><span>Current term ${pct_}%</span><span>${fmtDate(p.term_end)}</span></div>
     </div>
     <div class="pc-stats" onclick="openPolModal(${p.id})">
       <div class="pcs"><div class="pcs-n" style="color:var(--green)">${p.done_count||0}</div><div class="pcs-l">Done</div></div>
@@ -335,7 +353,7 @@ async function openPolModal(id){
   }catch(e){document.getElementById('pol-mbox').innerHTML=`<div class="modal-loading" style="color:var(--red)">Error: ${e.message}</div>`;}
 }
 function renderPolModal(pol,ratingRes){
-  const col=pc(pol.party);const pct_=pctTerm(pol.term_start,pol.term_end);
+  const col=pc(pol.party);const pct_=pctTerm(pol.term_start,pol.term_end);const sinceTs=servingSinceTs(pol);
   const agg=ratingRes?.aggregate||{};const ur=ratingRes?.userRating;
   const pr=_mPrFilter==='all'?pol.promises:pol.promises.filter(p=>p.status===_mPrFilter);
   document.getElementById('pol-mbox').innerHTML=`
@@ -349,8 +367,8 @@ function renderPolModal(pol,ratingRes){
       <button class="m-close" onclick="closeOverlay('pol-modal')">✕</button>
     </div>
     <div class="m-clock">
-      <div class="clk-lbl">Time in office</div>
-      <div class="m-clk-val mclk" data-ts="${pol.term_start}">${elapsedStr(pol.term_start)}</div>
+      <div class="clk-lbl">Serving Since</div>
+      <div class="m-clk-val mclk" data-ts="${sinceTs}">${elapsedStr(sinceTs)}</div>
       <div class="tbar" style="margin-top:6px"><div class="tbar-f" style="width:${pct_}%"></div></div>
       <div class="tdates"><span>${fmtDate(pol.term_start)}</span><span>${pct_}% of term</span><span>${fmtDate(pol.term_end)}</span></div>
     </div>
@@ -794,10 +812,10 @@ async function removeComment(id){try{await AdminAPI.removeComment(id);loadAdminS
 function toggleChat(){chatOpen=!chatOpen;document.getElementById('chat-panel').classList.toggle('open',chatOpen);}
 function addCMsg(role,text){
   const isAI=role==='assistant';const d=document.createElement('div');d.className=`cmsg ${isAI?'ai-cmsg':'usr-cmsg'}`;
-  d.innerHTML=`<div class="cmsg-av ${isAI?'ai-av':'usr-av'}">${isAI?'AI':'You'}</div><div><div class="cmsg-nm">${isAI?'YorStatus AI':'You'}</div><div class="cmsg-bub">${esc(text)}</div></div>`;
+  d.innerHTML=`<div class="cmsg-av ${isAI?'ai-av':'usr-av'}">${isAI?'AI':'You'}</div><div><div class="cmsg-nm">${isAI?'Yor Votes AI':'You'}</div><div class="cmsg-bub">${esc(text)}</div></div>`;
   const m=document.getElementById('chat-msgs');m.appendChild(d);m.scrollTop=m.scrollHeight;
 }
-function addThinking(){const d=document.createElement('div');d.id='tbub';d.className='cmsg ai-cmsg';d.innerHTML=`<div class="cmsg-av ai-av">AI</div><div><div class="cmsg-nm">YorStatus AI</div><div class="think-bub"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;document.getElementById('chat-msgs').appendChild(d);}
+function addThinking(){const d=document.createElement('div');d.id='tbub';d.className='cmsg ai-cmsg';d.innerHTML=`<div class="cmsg-av ai-av">AI</div><div><div class="cmsg-nm">Yor Votes AI</div><div class="think-bub"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;document.getElementById('chat-msgs').appendChild(d);}
 async function sendChat(){
   const ci=document.getElementById('chat-inp');const sb=document.getElementById('chat-send');const txt=ci.value.trim();if(!txt)return;
   ci.value='';sb.disabled=true;addCMsg('user',txt);chatHist.push({role:'user',content:txt});addThinking();

@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS politicians (
   twitter     TEXT,
   initials    TEXT,
   tab         TEXT NOT NULL CHECK(tab IN ('pm','cm','opp')),
+  serving_since TEXT,
   term_start  TEXT NOT NULL,
   term_end    TEXT NOT NULL,
   bio         TEXT,
@@ -411,6 +412,12 @@ CREATE INDEX IF NOT EXISTS idx_factcheck_pol    ON fact_checks(politician_id);
 CREATE INDEX IF NOT EXISTS idx_audit_user       ON audit_log(user_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_users_email      ON users(email);
 `);
+
+const politicianCols = db.prepare(`PRAGMA table_info(politicians)`).all().map((col) => col.name);
+if (!politicianCols.includes('serving_since')) {
+  db.exec(`ALTER TABLE politicians ADD COLUMN serving_since TEXT`);
+}
+db.exec(`UPDATE politicians SET serving_since = term_start WHERE serving_since IS NULL`);
 
 module.exports = db;
 module.exports.DB_PATH = RUNTIME_DB_PATH;
