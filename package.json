@@ -6,6 +6,7 @@
   ],
   "scripts": {
     "build": "node scripts/build.js",
+    "design:check": "node scripts/check-design.mjs",
     "start": "npm --workspace backend start",
     "dev": "npm --workspace backend run dev",
     "seed": "npm --workspace backend run seed",

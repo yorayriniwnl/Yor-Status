@@ -1,0 +1,20 @@
+{
+  "name": "YOR STATUS / public accountability",
+  "version": 1,
+  "palette": {
+    "void": "#000000",
+    "graphite": "#050505",
+    "crimson": "#e84b4b",
+    "deepCrimson": "#671515",
+    "signal": "#ff8a7f",
+    "warmWhite": "#f5eaea",
+    "muted": "#c4c4c4"
+  },
+  "gradient": ["#671515", "#8c1616", "#2a0505"],
+  "evidenceStates": ["VERIFIED", "REPORTED", "DEMO", "EXPERIMENTAL", "PLANNED", "UNVERIFIED"],
+  "principles": [
+    "source-linked claims",
+    "visible status boundaries",
+    "calm, high-contrast public records"
+  ]
+}

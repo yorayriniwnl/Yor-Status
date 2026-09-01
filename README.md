@@ -1,7 +1,27 @@
-# YorStatus India Enterprise v2.0 🇮🇳
-## India's #1 Political Accountability Platform
+# YOR STATUS // Public Accountability
 
-> **Built for scale. Designed to sell.**
+> Inspect promises, legal records, public signals, and source-linked discussion through an evidence-first interface.
+
+| Surface | State | Boundary |
+| --- | --- | --- |
+| Build packaging | `VERIFIED` | Local build completes and produces the static `dist/` surface. |
+| Frontend dashboard | `DEMO` | Static client backed by the local/API service. |
+| Backend routes | `EXPERIMENTAL` | Broad feature surface; verify every external dependency before launch. |
+| Seed dataset | `REPORTED` | Repository fixtures, not a claim that every record is currently verified. |
+| Vercel deployment | `UNVERIFIED` | Configuration is present; live availability needs an independent probe. |
+| Future integrations | `PLANNED` | Any new source, AI provider, or notification path must be validated separately. |
+
+The visual source of truth is [`design/yor-tokens.json`](./design/yor-tokens.json). Run `npm run design:check` after changing the dashboard surface.
+
+## Current verification
+
+The repository build copies `frontend/` to `dist/`, then generates a seed database through the backend. A successful build proves packaging only; it does not prove live data freshness, moderation, legal-source quality, AI availability, or deployment health.
+
+---
+
+## Product surface
+
+> **Status labels are intentional: verify the data path before making a public claim.**
 
 ---
 

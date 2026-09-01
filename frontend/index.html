@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Yor Votes India — Hold Power Accountable</title>
-<meta name="description" content="India's #1 political accountability platform. Track 65+ politicians, party manifestos, state GDP performance, legal records and public approval ratings in real time.">
-<meta property="og:title" content="Yor Votes India — Hold Power Accountable">
-<meta property="og:description" content="Real-time tracking of 65+ politicians, legal charges, state GDP rankings and public approval ratings.">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#000000">
+<title>YOR STATUS // Public Accountability</title>
+<meta name="description" content="A public accountability interface for inspecting promises, legal records, state signals, and evidence-linked discussion.">
+<meta property="og:title" content="YOR STATUS // Public Accountability">
+<meta property="og:description" content="Inspect public records, promise delivery, legal signals, and source-linked discussion in one evidence-first interface.">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
 
 <!-- NAV -->
 <nav id="nav">
-  <div class="nav-brand"><span class="logo">Yor Votes</span><span class="logo-sub">INDIA</span></div>
+  <div class="nav-brand"><span class="logo">YOR STATUS</span><span class="logo-sub">INDIA / PUBLIC RECORD</span></div>
   <div class="nav-links" id="navlinks">
     <a class="nl active" href="#" onclick="return goPage('dashboard',this)">Dashboard</a>
     <a class="nl" href="#" onclick="return goPage('politicians',this)">Politicians</a>
@@ -28,7 +28,7 @@
   </div>
   <div class="nav-right">
     <button onclick="openSearch()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:5px 14px;color:var(--mut);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.68rem;display:flex;align-items:center;gap:6px">⌕ Search <kbd style="font-size:.52rem;opacity:.5">⌘K</kbd></button>
-    <span class="live-dot"></span><span class="live-txt">Live</span>
+    <span class="live-dot"></span><span class="live-txt">API / ACTIVE</span>
     <span id="navclock" class="navclock"></span>
     <div id="user-nav-wrap"></div>
     <button class="burger" onclick="toggleNav()">☰</button>
@@ -41,8 +41,8 @@
 <div id="pg-dashboard" class="pg">
   <div class="hero">
     <div class="hero-left">
-      <div class="hero-eye">REAL-TIME POLITICAL ACCOUNTABILITY · INDIA 🇮🇳</div>
-      <h1 class="hero-h">Every Promise.<br>Every Charge.<br>Every Rupee.</h1>
+      <div class="hero-eye">PUBLIC ACCOUNTABILITY / INDIA</div>
+      <h1 class="hero-h">Promises.<br>Charges.<br>Receipts.</h1>
       <p class="hero-p">Tracking <b id="hc-pols">65</b> politicians · <b id="hc-pr">400+</b> promises · Live ratings · Legal records</p>
     </div>
     <div class="hero-stats" id="hero-stats">
