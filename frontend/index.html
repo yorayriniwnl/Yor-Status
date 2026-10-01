@@ -43,7 +43,7 @@
     <div class="hero-left">
       <div class="hero-eye">PUBLIC ACCOUNTABILITY / INDIA</div>
       <h1 class="hero-h">Promises.<br>Charges.<br>Receipts.</h1>
-      <p class="hero-p">Tracking <b id="hc-pols">65</b> politicians · <b id="hc-pr">400+</b> promises · Live ratings · Legal records</p>
+      <p class="hero-p">Tracking <b id="hc-pols">65</b> politician records · <b id="hc-pr">400+</b> promise records · Demo ratings · Legal records</p>
     </div>
     <div class="hero-stats" id="hero-stats">
       <div class="hsc"><div class="hsc-n green" style="font-size:1.5rem">—</div><div class="hsc-l">Kept</div></div>
@@ -64,7 +64,7 @@
 
 <!-- POLITICIANS -->
 <div id="pg-politicians" class="pg hidden">
-  <div class="pg-hdr"><h1 class="pg-title">Politicians</h1><p class="pg-sub">65 tracked politicians with live term clocks, promise stats, legal records and public approval ratings.</p></div>
+  <div class="pg-hdr"><h1 class="pg-title">Politicians</h1><p class="pg-sub">65 seeded politician records with term fields, promise stats, legal records and user ratings. Verify current officeholder and legal status before relying on this dataset.</p></div>
   <div class="ctrl-bar">
     <div class="sw"><span class="si">⌕</span><input class="srch" id="pol-srch" placeholder="Search name, state, party, role…" oninput="debounce('pols',loadPols)"></div>
     <div class="stabs" id="pol-tabs">
@@ -80,7 +80,7 @@
 
 <!-- PARTIES -->
 <div id="pg-parties" class="pg hidden">
-  <div class="pg-hdr"><h1 class="pg-title">Party Manifestos</h1><p class="pg-sub">Previous term promises vs delivery. Current manifesto tracking. Real-world impact analysis.</p></div>
+  <div class="pg-hdr"><h1 class="pg-title">Party Manifestos</h1><p class="pg-sub">Seeded manifesto and promise-status records for interface demonstration. Verify dates, status and impact claims before publication.</p></div>
   <div class="parties-grid" id="parties-grid"></div>
 </div>
 
@@ -118,7 +118,7 @@
 
 <!-- NEWS -->
 <div id="pg-news" class="pg hidden">
-  <div class="pg-hdr"><h1 class="pg-title">News & Media</h1><p class="pg-sub">Latest news articles about politicians, states and accountability. Add articles via the API or Admin panel.</p></div>
+  <div class="pg-hdr"><h1 class="pg-title">News & Media</h1><p class="pg-sub">News records loaded into the dataset. Source date, provenance and currentness must be verified before publication.</p></div>
   <div class="ctrl-bar">
     <div class="pfs">
       <button class="pf on" onclick="filterNews('',this)">All</button>
@@ -229,11 +229,11 @@
 </button>
 <div class="chat-panel" id="chat-panel">
   <div class="chat-head">
-    <div class="chat-ai-wrap"><div class="chat-ai-av">AI</div><div><div class="chat-ai-nm">Yor Votes AI</div><div class="chat-ai-sub">Live Database · Political Accountability</div></div></div>
-    <div class="chat-live"><span class="live-dot"></span>Live</div>
+    <div class="chat-ai-wrap"><div class="chat-ai-av">AI</div><div><div class="chat-ai-nm">Yor Votes AI</div><div class="chat-ai-sub">Seed Dataset · Political Accountability</div></div></div>
+    <div class="chat-live"><span class="live-dot"></span>Dataset</div>
   </div>
   <div class="chat-msgs" id="chat-msgs">
-    <div class="cmsg ai-cmsg"><div class="cmsg-av ai-av">AI</div><div><div class="cmsg-nm">Yor Votes AI</div><div class="cmsg-bub">Hello! I'm connected to the live Yor Votes database. Ask me about politicians' promises, legal charges, state GDP rankings, party manifesto delivery, or anything about Indian political accountability.</div></div></div>
+    <div class="cmsg ai-cmsg"><div class="cmsg-av ai-av">AI</div><div><div class="cmsg-nm">Yor Votes AI</div><div class="cmsg-bub">Hello! I can summarize the loaded Yor Votes seed dataset. Its political, legal and economic records may be outdated, so treat answers as dataset descriptions rather than current-world facts and verify source dates before relying on them.</div></div></div>
   </div>
   <div class="chat-inp-row">
     <input class="chat-inp" id="chat-inp" placeholder="Ask about any politician, party or state…">
