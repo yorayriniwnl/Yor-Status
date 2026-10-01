@@ -83,7 +83,7 @@ npm start                   # http://localhost:3001
 - **10 charge categories:** Criminal, Financial Fraud, Civil, Corporate/Business, Traffic/Minor, Cyber/IT, Special Laws (NDPS/UAPA), Corruption/DA, Contempt, Electoral Violations
 - **7 status levels:** Active 🔴 | Pending 🟡 | Dismissed ✅ | Acquitted ✅ | Convicted ⚫ | Settled 🔵 | Stayed 🟠
 - **4 severity levels:** Minor / Moderate / Serious / Severe
-- Overview charts: by category, by party, most charged politicians
+- Overview charts: by category, by party, and stored legal-record counts; no ranking implies guilt or fitness
 - Grouped by politician with expandable charge cards
 - Case numbers, court, filing agency, dates, outcomes, source links
 - Legal panel embedded in every politician modal
@@ -100,7 +100,7 @@ npm start                   # http://localhost:3001
 - 1–5 star ratings stored on server per session
 - Verdict labels (Excellent / Good / Average / Poor / Very Poor)
 - Written reviews with helpful voting
-- Aggregated public approval % shown to all users
+- Aggregated user-rating average shown to users; this is an opinion signal, not a factual assessment
 - Promise fulfillment breakdown bars
 - Star distribution breakdown (1★ through 5★)
 - Recent reviews panel in politician modal
@@ -216,7 +216,7 @@ npm start                   # http://localhost:3001
 
 | Table | Purpose |
 |-------|---------|
-| `politicians` | All 65 tracked politicians |
+| `politicians` | 65 seeded politician records |
 | `promises` | Individual promises with status |
 | `users` | Registered users |
 | `sessions` | JWT sessions |
