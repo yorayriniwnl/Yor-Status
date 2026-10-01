@@ -66,12 +66,12 @@ router.post('/login', async (req, res) => {
 /* ── POST /api/auth/admin-setup ── (one-time) ── */
 router.post('/admin-setup', async (req, res) => {
   const { setup_key, email, password } = req.body;
-  const SETUP_KEY = process.env.ADMIN_SETUP_KEY || 'changeme123';
+  const SETUP_KEY = process.env.ADMIN_SETUP_KEY;
   const emailValue = cleanEmail(email);
-  if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_SETUP_KEY) {
-    return res.status(500).json({ error: 'ADMIN_SETUP_KEY must be configured in production' });
+  if (!SETUP_KEY) {
+    return res.status(503).json({ error: 'Admin setup is disabled until ADMIN_SETUP_KEY is configured' });
   }
-  if (setup_key !== SETUP_KEY) return res.status(403).json({ error: 'Invalid setup key' });
+  if (typeof setup_key !== 'string' || setup_key !== SETUP_KEY) return res.status(403).json({ error: 'Invalid setup key' });
   if (!validEmail(emailValue) || typeof password !== 'string') return res.status(400).json({ error: 'Valid email and password required' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
   const existingAdmin = db.prepare(`SELECT id FROM users WHERE role='admin' OR role='superadmin'`).get();
