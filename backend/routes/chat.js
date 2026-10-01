@@ -87,7 +87,7 @@ Top States by GDP: ${context.stateSummary.slice(0, 8).map((item) => `${item.name
 
 GUIDELINES:
 - Be factual and evidence-based; cite specific numbers from the data
-- Stay politically neutral
+- Stay politically neutral\n- Do not rank, recommend, endorse, or oppose political actors or parties
 - Keep responses concise unless the user asks for depth
 - Describe claims as what the dataset records, not as independently verified current facts\n- Distinguish user ratings/opinions from sourced records\n- For legal records, preserve the recorded status (for example pending, dismissed, acquitted or convicted) and do not imply guilt from a charge alone\n- If the database does not contain an answer, say so honestly`;
 }
@@ -99,7 +99,7 @@ function buildFallbackReply(messages, context) {
   const politician = context.polSummary.find((item) => query.includes(item.name.toLowerCase()));
   if (politician) {
     const ratingText = politician.avg_rating ? `${politician.avg_rating}/5` : 'not yet rated';
-    return `${politician.name} is tracked as a ${politician.party} leader for ${politician.state}. In the database, they have ${politician.done || 0} promises marked done, ${politician.prog || 0} in progress, ${politician.pend || 0} pending, and ${politician.brok || 0} broken. The loaded dataset shows a user rating of ${ratingText}. It also contains ${politician.active_charges || 0} legal records marked active out of ${politician.total_charges || 0} total recorded legal records; these statuses require dated source verification.`;
+    return `The loaded dataset records ${politician.name} with party ${politician.party} and state field ${politician.state}. It contains ${politician.done || 0} promises marked done, ${politician.prog || 0} in progress, ${politician.pend || 0} pending, and ${politician.brok || 0} broken. The loaded dataset shows a user rating of ${ratingText}. It also contains ${politician.active_charges || 0} legal records marked active out of ${politician.total_charges || 0} total recorded legal records; these statuses require dated source verification.`;
   }
 
   const state = context.stateSummary.find((item) => query.includes(item.name.toLowerCase()));
@@ -130,11 +130,7 @@ function buildFallbackReply(messages, context) {
     promiseMap[item.status] = item.c;
   });
 
-  const topRatedSummary = context.topRated.length
-    ? context.topRated.map((item) => `${item.name} (${item.avg_rating}/5)`).join(', ')
-    : 'no public ratings yet';
-
-  return `The loaded Yor Votes dataset contains ${context.polSummary.length} politician records, ${promiseMap.done || 0} kept promises, ${promiseMap.prog || 0} promises in progress, ${promiseMap.pend || 0} pending promises, and ${promiseMap.brok || 0} broken promises. The platform also includes ${context.legalSummary.total} legal records and a full state GDP tracker. The highest user-rating entries in this dataset are ${topRatedSummary}; these ratings are user opinions, not objective assessments. Ask about a politician, party, state, GDP ranking, or legal record for a more specific answer.`;
+  return `The loaded Yor Votes dataset contains ${context.polSummary.length} politician records, ${promiseMap.done || 0} promises marked done, ${promiseMap.prog || 0} marked in progress, ${promiseMap.pend || 0} marked pending, and ${promiseMap.brok || 0} marked broken. The platform also contains ${context.legalSummary.total} legal records and state metrics. User ratings are opinion signals and are not used here to rank or recommend political actors. Ask about a specific record for a dataset-scoped summary.`;
 }
 
 router.post('/', async (req, res) => {
