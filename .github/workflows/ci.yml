@@ -32,6 +32,15 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
       - name: Design contract
         run: npm run design:check
+      - name: Dataset currentness boundary
+        shell: bash
+        run: |
+          if grep -R --line-number -E "live Yor Votes database|You have access to live data from the app database|Samrat Choudhary|current public rating|most charged politicians right now" README.md frontend backend/routes/chat.js; then
+            echo "Unbounded current-world political claim detected"
+            exit 1
+          fi
+          grep -q "Do not rank, recommend, endorse, or oppose political actors or parties" backend/routes/chat.js
+          grep -q "Seed Dataset" frontend/index.html
       - name: Compile backend JavaScript
         run: |
           find backend -type f -name '*.js' -not -path '*/node_modules/*' -print0 |
