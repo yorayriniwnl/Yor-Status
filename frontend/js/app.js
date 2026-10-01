@@ -316,7 +316,7 @@ function polCardHTML(p,idx){
       <div class="clk-lbl">Serving Since</div>
       <div class="clk-val clk-v" data-ts="${sinceTs}">${elapsedStr(sinceTs)}</div>
       <div class="tbar"><div class="tbar-f" style="width:${pct_}%"></div></div>
-      <div class="tdates"><span>${fmtDate(p.term_start)}</span><span>Current term ${pct_}%</span><span>${fmtDate(p.term_end)}</span></div>
+      <div class="tdates"><span>${fmtDate(p.term_start)}</span><span>Stored term progress ${pct_}%</span><span>${fmtDate(p.term_end)}</span></div>
     </div>
     <div class="pc-stats" onclick="openPolModal(${p.id})">
       <div class="pcs"><div class="pcs-n" style="color:var(--green)">${p.done_count||0}</div><div class="pcs-l">Done</div></div>
@@ -325,7 +325,7 @@ function polCardHTML(p,idx){
       <div class="pcs"><div class="pcs-n" style="color:var(--red)">${p.brok_count||0}</div><div class="pcs-l">Broken</div></div>
     </div>
     <div class="pc-appr" onclick="openPolModal(${p.id})">
-      <div class="clk-lbl">Public approval · <span class="rating-live-${p.id}">${gr>0?gr+'/5 ('+p.rating_count+')':'No ratings yet'}</span></div>
+      <div class="clk-lbl">User rating · <span class="rating-live-${p.id}">${gr>0?gr+'/5 ('+p.rating_count+')':'No ratings yet'}</span></div>
       <div class="appr-bar"><div class="appr-fill" style="width:${apprPct}%;background:${apprPct>=70?'var(--green)':apprPct>=50?'var(--gold)':'var(--red)'}"></div></div>
       <div class="appr-meta">${starsStr(gr)}</div>
     </div>
@@ -394,7 +394,7 @@ function renderPolModal(pol,ratingRes){
       ${pol.timeline.map(e=>`<div style="display:flex;gap:8px;margin-bottom:6px"><div style="font-size:.6rem;color:var(--hin);font-family:'JetBrains Mono',monospace;flex-shrink:0;padding-top:2px">${e.event_date}</div><div><div style="font-size:.75rem;color:var(--txt)">${esc(e.title)}</div></div></div>`).join('')}
     </div>`:''}
     <div class="m-appr">
-      <h4>Public Approval · ${agg.total||0} ratings</h4>
+      <h4>User Ratings · ${agg.total||0} ratings</h4>
       <div style="display:flex;gap:1rem;align-items:center;margin-bottom:.75rem">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--gold);line-height:1">${agg.avg_stars||'—'}</div>
         <div><div style="font-size:1.2rem;color:var(--gold)">${starsStr(agg.avg_stars||0)}</div><div style="font-size:.65rem;color:var(--mut);font-family:'JetBrains Mono',monospace">out of 5.0 from ${agg.total||0} voters</div></div>
@@ -611,7 +611,7 @@ function apprCardHTML(p,idx){
     <div class="aprc-head"><div class="aprc-photo"><img src="${imgUrl(p.twitter)}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><div class="aprc-fb" style="background:${col}22;color:${col}">${p.initials}</div></div>
       <div><div class="aprc-name">${esc(p.name)}</div><div class="aprc-role">${esc(p.role)}</div><div class="aprc-role">${esc(p.state)}</div><span style="display:inline-block;margin-top:3px;font-size:.56rem;padding:2px 6px;border-radius:9px;font-family:'JetBrains Mono',monospace;background:${col}18;color:${col};border:1px solid ${col}28">${p.party}</span></div>
     </div>
-    <div class="aprc-global"><div class="agr-lbl">Public Approval · ${cnt} ratings</div><div class="star-row">${Array.from({length:5},(_,i)=>`<span style="color:${i<Math.round(gr)?'var(--gold)':'var(--hin)'}">${i<Math.round(gr)?'★':'☆'}</span>`).join('')}</div><div class="aprc-meta">${gr>0?gr+'/5':cnt===0?'No ratings':'—'}</div><div class="aprc-gbar"><div class="aprc-gfill" style="width:${gr/5*100}%"></div></div></div>
+    <div class="aprc-global"><div class="agr-lbl">User Ratings · ${cnt} ratings</div><div class="star-row">${Array.from({length:5},(_,i)=>`<span style="color:${i<Math.round(gr)?'var(--gold)':'var(--hin)'}">${i<Math.round(gr)?'★':'☆'}</span>`).join('')}</div><div class="aprc-meta">${gr>0?gr+'/5':cnt===0?'No ratings':'—'}</div><div class="aprc-gbar"><div class="aprc-gfill" style="width:${gr/5*100}%"></div></div></div>
     <div class="aprc-verdict"><div class="agr-lbl">Promise Fulfillment</div>
       <div class="vrow"><div class="vlbl">Delivered</div><div class="vbar"><div class="vfill" style="width:${pd}%;background:var(--green)"></div></div><div class="vpct">${pd}%</div></div>
       <div class="vrow"><div class="vlbl">In Progress</div><div class="vbar"><div class="vfill" style="width:${pp}%;background:var(--blue)"></div></div><div class="vpct">${pp}%</div></div>

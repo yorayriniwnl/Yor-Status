@@ -32,7 +32,6 @@ npm install
 cp backend/.env.example backend/.env   # Add ANTHROPIC_API_KEY
 npm run seed                # Seed all data (~30 seconds)
 npm start                   # http://localhost:3001
-npm start                   # → http://localhost:3001
 ```
 
 ---
@@ -40,22 +39,22 @@ npm start                   # → http://localhost:3001
 ## FULL FEATURE LIST
 
 ### 🏠 Dashboard
-- Live promise stats (Done / Progress / Pending / Broken)
+- Seeded promise-status stats (Done / Progress / Pending / Broken)
 - GDP Growth Leaderboard (top states)  
 - Party Promise Performance bar chart (Chart.js)
-- Highest rated politicians (from live DB)
+- Highest-rated entries from the local ratings table (demo/user-generated signal, not an objective assessment)
 - Most broken promises heat map
 - Legal charges heat map
-- Latest news feed
+- News records from the loaded dataset
 
-### 👤 Politicians (65 total)
-- **26 Central Cabinet Ministers** — PM Modi, Amit Shah, Nirmala Sitharaman, Jaishankar, Gadkari and 21 more
-- **31 Chief Ministers** — all states + J&K, Delhi, Puducherry (incl. new Bihar CM Samrat Choudhary)
-- **8 Opposition Leaders** — Rahul Gandhi, Kejriwal, Akhilesh, Tejashwi and more
-- Live ticking term clocks (d/h/m/s)
+### 👤 Politicians (65 seeded records)
+- Records are grouped into cabinet, chief-minister, and opposition demo tabs.
+- Names, offices, party affiliations, terms, metrics, and legal/status fields are repository seed data and may be outdated.
+- Verify every officeholder/status claim against a dated primary or authoritative source before public use.
+- Term clocks are computed from seeded dates; they are not independent evidence that a term is current.
 - Twitter profile photos (unavatar.io)
 - Promise fulfillment stats with per-status filters
-- Server-stored public approval ratings with star breakdowns + written reviews
+- Server-stored user ratings with star breakdowns + written reviews; these are user opinions, not factual assessments
 - Legal charges panel inside each politician modal
 - Fact check results  
 - Timeline of key events
@@ -67,7 +66,7 @@ npm start                   # → http://localhost:3001
 ### 📋 Party Manifestos (8 parties)
 - BJP, INC, AAP, TMC, DMK, SP, JMM, CPI(M)
 - Previous election promises vs actual delivery with real-world impact text
-- Current manifesto tracking
+- Manifesto records as represented in the loaded dataset
 - States currently governing
 - Delivery rate progress bar
 
@@ -76,7 +75,7 @@ npm start                   # → http://localhost:3001
 - Long-term impact scores: Infrastructure / Welfare / Economy / Governance / Environment
 - Key policy decisions with Positive/Negative/Mixed classification and impact text
 - Full state metrics: GDP size, HDI, literacy, unemployment
-- Recent state news
+- State-linked news records from the loaded dataset
 - State-specific public discussion (comments)
 - Filter by party, sort by GDP / Welfare / HDI
 
@@ -84,7 +83,7 @@ npm start                   # → http://localhost:3001
 - **10 charge categories:** Criminal, Financial Fraud, Civil, Corporate/Business, Traffic/Minor, Cyber/IT, Special Laws (NDPS/UAPA), Corruption/DA, Contempt, Electoral Violations
 - **7 status levels:** Active 🔴 | Pending 🟡 | Dismissed ✅ | Acquitted ✅ | Convicted ⚫ | Settled 🔵 | Stayed 🟠
 - **4 severity levels:** Minor / Moderate / Serious / Severe
-- Overview charts: by category, by party, most charged politicians
+- Overview charts: by category, by party, and stored legal-record counts; no ranking implies guilt or fitness
 - Grouped by politician with expandable charge cards
 - Case numbers, court, filing agency, dates, outcomes, source links
 - Legal panel embedded in every politician modal
@@ -101,7 +100,7 @@ npm start                   # → http://localhost:3001
 - 1–5 star ratings stored on server per session
 - Verdict labels (Excellent / Good / Average / Poor / Very Poor)
 - Written reviews with helpful voting
-- Aggregated public approval % shown to all users
+- Aggregated user-rating average shown to users; this is an opinion signal, not a factual assessment
 - Promise fulfillment breakdown bars
 - Star distribution breakdown (1★ through 5★)
 - Recent reviews panel in politician modal
@@ -153,7 +152,7 @@ npm start                   # → http://localhost:3001
 - Moderators can update promise statuses live
 
 ### 🤖 AI Chat (Claude Sonnet)
-- Reads live database context on every message
+- Reads the loaded database snapshot on every message
 - Knows promise stats, GDP rankings, legal counts
 - Rate limited: 20 req/min per IP
 - Streamed through secure backend proxy
@@ -217,7 +216,7 @@ npm start                   # → http://localhost:3001
 
 | Table | Purpose |
 |-------|---------|
-| `politicians` | All 65 tracked politicians |
+| `politicians` | 65 seeded politician records |
 | `promises` | Individual promises with status |
 | `users` | Registered users |
 | `sessions` | JWT sessions |
@@ -299,5 +298,4 @@ server {
 
 ---
 
-Built with ❤️ for Indian democratic accountability  
-Data sourced from: court records, ECI affidavits, CAG reports, news archives
+Built as an experimental public-accountability interface. Repository fixtures are not proof of current political, legal, economic, or officeholder status. Before publication, each substantive record should carry a dated source URL, retrieval date, and verification status.

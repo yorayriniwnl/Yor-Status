@@ -75,9 +75,9 @@ function buildSystemPrompt(context) {
     promiseMap[item.status] = item.c;
   });
 
-  return `You are Yor Votes AI - India's political accountability assistant. You have access to live data from the app database.
+  return `You are Yor Votes AI, an assistant that summarizes the application's repository-seeded political-accountability dataset. The dataset may be incomplete or outdated. Never present a seeded record as proof of current real-world office, legal, economic, promise, or manifesto status.
 
-LIVE DATA (${new Date().toLocaleDateString('en-IN')}):
+SEEDED DATABASE SNAPSHOT (queried ${new Date().toLocaleDateString('en-IN')}):
 Promise Statistics: Done=${promiseMap.done || 0} | In Progress=${promiseMap.prog || 0} | Pending=${promiseMap.pend || 0} | Broken=${promiseMap.brok || 0}
 Legal Records: ${context.legalSummary.total} total charges | ${context.legalSummary.active} active | ${context.legalSummary.convicted} convicted
 
@@ -87,9 +87,9 @@ Top States by GDP: ${context.stateSummary.slice(0, 8).map((item) => `${item.name
 
 GUIDELINES:
 - Be factual and evidence-based; cite specific numbers from the data
-- Stay politically neutral
+- Stay politically neutral\n- Do not rank, recommend, endorse, or oppose political actors or parties
 - Keep responses concise unless the user asks for depth
-- If the database does not contain an answer, say so honestly`;
+- Describe claims as what the dataset records, not as independently verified current facts\n- Distinguish user ratings/opinions from sourced records\n- For legal records, preserve the recorded status (for example pending, dismissed, acquitted or convicted) and do not imply guilt from a charge alone\n- If the database does not contain an answer, say so honestly`;
 }
 
 function buildFallbackReply(messages, context) {
@@ -99,13 +99,13 @@ function buildFallbackReply(messages, context) {
   const politician = context.polSummary.find((item) => query.includes(item.name.toLowerCase()));
   if (politician) {
     const ratingText = politician.avg_rating ? `${politician.avg_rating}/5` : 'not yet rated';
-    return `${politician.name} is tracked as a ${politician.party} leader for ${politician.state}. In the database, they have ${politician.done || 0} promises marked done, ${politician.prog || 0} in progress, ${politician.pend || 0} pending, and ${politician.brok || 0} broken. Their current public rating is ${ratingText}. They also have ${politician.active_charges || 0} active legal charges out of ${politician.total_charges || 0} total recorded charges.`;
+    return `The loaded dataset records ${politician.name} with party ${politician.party} and state field ${politician.state}. It contains ${politician.done || 0} promises marked done, ${politician.prog || 0} in progress, ${politician.pend || 0} pending, and ${politician.brok || 0} broken. The loaded dataset shows a user rating of ${ratingText}. It also contains ${politician.active_charges || 0} legal records marked active out of ${politician.total_charges || 0} total recorded legal records; these statuses require dated source verification.`;
   }
 
   const state = context.stateSummary.find((item) => query.includes(item.name.toLowerCase()));
   if (state) {
     const avgScore = Math.round(((state.score_infra || 0) + (state.score_welfare || 0) + (state.score_economy || 0) + (state.score_govn || 0) + (state.score_env || 0)) / 5);
-    return `${state.name} is ranked #${state.rank_gdp} by GDP growth at ${state.gdp_growth}%, and is led by ${state.cm_name} of ${state.party}. Its average long-term impact score in the database is ${avgScore}/100. The strongest tracked scores are welfare ${state.score_welfare || 0}, economy ${state.score_economy || 0}, and governance ${state.score_govn || 0}. Ask me if you want a comparison with another state.`;
+    return `${state.name} is ranked #${state.rank_gdp} by GDP growth at ${state.gdp_growth}% in the loaded dataset, which records ${state.cm_name} (${state.party}) in its leadership field. Its stored average long-term impact score is ${avgScore}/100. The strongest tracked scores are welfare ${state.score_welfare || 0}, economy ${state.score_economy || 0}, and governance ${state.score_govn || 0}. Ask me if you want a comparison with another state.`;
   }
 
   if (query.includes('gdp') || query.includes('top state') || query.includes('best state')) {
@@ -113,7 +113,7 @@ function buildFallbackReply(messages, context) {
       .slice(0, 5)
       .map((item) => `${item.rank_gdp}. ${item.name} (${item.gdp_growth}%)`)
       .join(', ');
-    return `The current top GDP-growth states in the dataset are ${topStates}. These rankings come from the same state tracker data the frontend uses. If you want a welfare- or HDI-oriented comparison instead, ask for that directly.`;
+    return `The top GDP-growth entries in the loaded dataset are ${topStates}. These values may not be current. These rankings come from the same state tracker data the frontend uses. If you want a welfare- or HDI-oriented comparison instead, ask for that directly.`;
   }
 
   if (query.includes('legal') || query.includes('charge') || query.includes('case')) {
@@ -122,7 +122,7 @@ function buildFallbackReply(messages, context) {
       .slice(0, 3)
       .map((item) => `${item.name} (${item.total_charges || 0} total, ${item.active_charges || 0} active)`)
       .join(', ');
-    return `The database currently tracks ${context.legalSummary.total} legal charges, with ${context.legalSummary.active} active and ${context.legalSummary.convicted} convicted. The most charged politicians right now are ${mostCharged}. If you name a specific politician, I can narrow the legal summary further.`;
+    return `The loaded dataset contains ${context.legalSummary.total} legal records, with ${context.legalSummary.active} marked active and ${context.legalSummary.convicted} marked convicted. The records with the highest stored charge counts are ${mostCharged}. Status and provenance should be verified from dated sources. If you name a specific politician, I can narrow the legal summary further.`;
   }
 
   const promiseMap = {};
@@ -130,11 +130,7 @@ function buildFallbackReply(messages, context) {
     promiseMap[item.status] = item.c;
   });
 
-  const topRatedSummary = context.topRated.length
-    ? context.topRated.map((item) => `${item.name} (${item.avg_rating}/5)`).join(', ')
-    : 'no public ratings yet';
-
-  return `Yor Votes currently tracks ${context.polSummary.length} politicians, ${promiseMap.done || 0} kept promises, ${promiseMap.prog || 0} promises in progress, ${promiseMap.pend || 0} pending promises, and ${promiseMap.brok || 0} broken promises. The platform also includes ${context.legalSummary.total} legal records and a full state GDP tracker. Top currently rated politicians are ${topRatedSummary}. Ask about a politician, party, state, GDP ranking, or legal record for a more specific answer.`;
+  return `The loaded Yor Votes dataset contains ${context.polSummary.length} politician records, ${promiseMap.done || 0} promises marked done, ${promiseMap.prog || 0} marked in progress, ${promiseMap.pend || 0} marked pending, and ${promiseMap.brok || 0} marked broken. The platform also contains ${context.legalSummary.total} legal records and state metrics. User ratings are opinion signals and are not used here to rank or recommend political actors. Ask about a specific record for a dataset-scoped summary.`;
 }
 
 router.post('/', async (req, res) => {
