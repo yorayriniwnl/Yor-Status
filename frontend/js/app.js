@@ -402,7 +402,7 @@ function renderPolModal(pol,ratingRes){
       ${ratingRes?.recentReviews?.length?`<div style="margin-bottom:.75rem">${ratingRes.recentReviews.slice(0,3).map(r=>`<div style="background:rgba(255,255,255,.03);border-radius:8px;padding:.65rem;margin-bottom:5px"><div style="display:flex;gap:6px;margin-bottom:3px"><span style="color:var(--gold);font-size:.85rem">${starsStr(r.stars)}</span>${r.verdict?`<span style="font-size:.6rem;padding:2px 7px;border-radius:10px;background:rgba(255,215,0,.08);color:var(--gold);font-family:'JetBrains Mono',monospace">${r.verdict}</span>`:''}</div><div style="font-size:.75rem;color:var(--txt)">${esc(r.review_text)}</div><div style="font-size:.6rem;color:var(--hin);font-family:'JetBrains Mono',monospace;margin-top:2px">${r.display_name||r.username||'Anonymous'} · ${timeAgo(r.created_at)}</div></div>`).join('')}</div>`:''}
       <h4 style="margin-top:.75rem">Your Rating</h4>
       <div class="m-stars" id="mstars-${pol.id}">${Array.from({length:5},(_,i)=>`<span class="m-star ${i<(_mStars[pol.id]||0)?'on':''}" onclick="setMStar(${pol.id},${i+1})">★</span>`).join('')}</div>
-      <div class="m-verdict-row" id="mverdicts-${pol.id}">${['Excellent','Good','Average','Poor','Corrupt'].map(v=>`<button class="mv-btn ${(_mVerdict[pol.id]||'')=== v?'on':''}" onclick="setMVerdict(${pol.id},'${v}')">${v}</button>`).join('')}</div>
+      <div class="m-verdict-row" id="mverdicts-${pol.id}">${['Excellent','Good','Average','Poor','Very Poor'].map(v=>`<button class="mv-btn ${(_mVerdict[pol.id]||'')=== v?'on':''}" onclick="setMVerdict(${pol.id},'${v}')">${v}</button>`).join('')}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
         <button class="m-save" onclick="saveMRating(${pol.id})">Save My Rating</button>
         ${isLoggedIn()&&!pol.isWatching?`<button class="m-save" onclick="watchPol(${pol.id})" style="background:rgba(0,200,255,.08);border-color:rgba(0,200,255,.25);color:var(--blue)">👁 Watch</button>`:''}
@@ -619,7 +619,7 @@ function apprCardHTML(p,idx){
     </div>
     <div class="aprc-user"><div class="aprc-ulbl">Your Rating</div>
       <div class="star-inp" id="appr-stars-${p.id}">${Array.from({length:5},(_,i)=>`<span class="si-star" onclick="setApprStar(${p.id},${i+1})">★</span>`).join('')}</div>
-      <div class="verdict-btns">${['Excellent','Good','Average','Poor','Corrupt'].map(v=>`<button class="vbtn" onclick="setApprVerdict(${p.id},'${v}')">${v}</button>`).join('')}</div>
+      <div class="verdict-btns">${['Excellent','Good','Average','Poor','Very Poor'].map(v=>`<button class="vbtn" onclick="setApprVerdict(${p.id},'${v}')">${v}</button>`).join('')}</div>
       <div id="appr-saved-${p.id}" style="height:4px"></div>
       <button class="save-btn" onclick="saveApprRating(${p.id})">Save My Rating</button>
     </div>
