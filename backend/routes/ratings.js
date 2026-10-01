@@ -4,7 +4,7 @@ const db      = require('../db');
 const { optionalAuth } = require('../middleware/auth');
 const { del } = require('../services/cache');
 
-const VERDICTS = ['Excellent', 'Good', 'Average', 'Poor', 'Corrupt'];
+const VERDICTS = ['Excellent', 'Good', 'Average', 'Poor', 'Very Poor'];
 
 function clearRatingCaches() {
   del('cache:/api/politicians*');
@@ -23,7 +23,7 @@ router.get('/:politician_id', optionalAuth, (req, res) => {
       COALESCE(SUM(CASE WHEN verdict='Good' THEN 1 ELSE 0 END), 0) as good,
       COALESCE(SUM(CASE WHEN verdict='Average' THEN 1 ELSE 0 END), 0) as average,
       COALESCE(SUM(CASE WHEN verdict='Poor' THEN 1 ELSE 0 END), 0) as poor,
-      COALESCE(SUM(CASE WHEN verdict='Corrupt' THEN 1 ELSE 0 END), 0) as corrupt
+      COALESCE(SUM(CASE WHEN verdict='Very Poor' THEN 1 ELSE 0 END), 0) as corrupt
     FROM ratings WHERE politician_id=? AND is_flagged=0
   `).get(req.params.politician_id);
 
