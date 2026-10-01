@@ -12,5 +12,8 @@
     "seed": "npm --workspace backend run seed",
     "seed:legal": "npm --workspace backend run seed:legal",
     "seed:news": "npm --workspace backend run seed:news"
+  },
+  "overrides": {
+    "qs": "6.16.0"
   }
 }
