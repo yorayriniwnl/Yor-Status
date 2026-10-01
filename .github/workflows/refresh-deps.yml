@@ -6,6 +6,8 @@ on:
       - ci/verification-20261001
     paths:
       - ".github/workflows/refresh-deps.yml"
+      - "package.json"
+      - "backend/package.json"
 
 permissions:
   contents: write
@@ -27,8 +29,10 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-      - name: Apply non-breaking audit fixes
-        run: npm audit fix
+      - name: Regenerate dependency lock
+        run: npm install --package-lock-only
+      - name: Install validated dependency tree
+        run: npm ci
       - name: Verify production dependency audit
         run: npm audit --omit=dev --audit-level=high
       - name: Verify design contract
