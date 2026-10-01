@@ -1,7 +1,7 @@
 {
   "name": "yorstatus-india",
   "version": "2.0.0",
-  "description": "India's #1 Political Accountability Platform — Full Stack Enterprise",
+  "description": "Evidence-first political accountability dashboard prototype with source-linked records, discussion, and moderation surfaces",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
