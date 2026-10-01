@@ -99,7 +99,7 @@ npm start                   # → http://localhost:3001
 
 ### ⭐ Approval Ratings
 - 1–5 star ratings stored on server per session
-- Verdict labels (Excellent / Good / Average / Poor / Corrupt)
+- Verdict labels (Excellent / Good / Average / Poor / Very Poor)
 - Written reviews with helpful voting
 - Aggregated public approval % shown to all users
 - Promise fulfillment breakdown bars
