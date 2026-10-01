@@ -1,0 +1,53 @@
+name: Refresh vulnerable dependencies
+
+on:
+  push:
+    branches:
+      - ci/verification-20261001
+    paths:
+      - ".github/workflows/refresh-deps.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_ENV: test
+      JWT_SECRET: ci-only-jwt-secret-that-is-not-used-in-production-0123456789
+      ADMIN_SETUP_KEY: ci-only-admin-setup-key
+      YORSTATUS_DISABLE_CRON: "1"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ci/verification-20261001
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Apply non-breaking audit fixes
+        run: npm audit fix
+      - name: Verify production dependency audit
+        run: npm audit --omit=dev --audit-level=high
+      - name: Verify design contract
+        run: npm run design:check
+      - name: Verify backend JavaScript
+        run: |
+          find backend -type f -name '*.js' -not -path '*/node_modules/*' -print0 |
+          xargs -0 -n1 node --check
+      - name: Verify packaged demo build
+        run: npm run build
+      - name: Commit validated dependency refresh
+        shell: bash
+        run: |
+          if git diff --quiet -- package.json package-lock.json backend/package.json; then
+            echo "No dependency update required"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json backend/package.json
+          git commit -m "deps: apply validated security updates"
+          git push origin HEAD:ci/verification-20261001
