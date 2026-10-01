@@ -29,12 +29,14 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-      - name: Regenerate dependency lock
-        run: npm install --package-lock-only
+      - name: Regenerate and repair dependency lock
+        run: |
+          npm install --package-lock-only
+          npm audit fix --package-lock-only || true
       - name: Install validated dependency tree
         run: npm ci
-      - name: Verify production dependency audit
-        run: npm audit --omit=dev --audit-level=high
+      - name: Verify zero production dependency advisories
+        run: npm audit --omit=dev
       - name: Verify design contract
         run: npm run design:check
       - name: Verify backend JavaScript
