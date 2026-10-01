@@ -1,7 +1,10 @@
 const jwt = require('jsonwebtoken');
 const db  = require('../db');
 
-const SECRET = process.env.JWT_SECRET || 'dev_secret_change_in_production';
+const SECRET = process.env.JWT_SECRET;
+if (!SECRET) {
+  throw new Error('JWT_SECRET is required. Copy backend/.env.example to backend/.env and configure a strong secret.');
+}
 
 /* ── Generate token ── */
 function signToken(userId) {
