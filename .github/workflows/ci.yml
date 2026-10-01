@@ -41,6 +41,16 @@ jobs:
           fi
           grep -q "Do not rank, recommend, endorse, or oppose political actors or parties" backend/routes/chat.js
           grep -q "Seed Dataset" frontend/index.html
+      - name: Auth secret boundary
+        shell: bash
+        run: |
+          if grep -R --line-number --fixed-strings "changeme123" backend; then
+            echo "Hard-coded admin setup fallback detected"
+            exit 1
+          fi
+          grep -q "const SETUP_KEY = process.env.ADMIN_SETUP_KEY" backend/routes/auth.js
+          grep -q "if (!SETUP_KEY)" backend/routes/auth.js
+          grep -q "ADMIN_SETUP_KEY=" backend/.env.example
       - name: Compile backend JavaScript
         run: |
           find backend -type f -name '*.js' -not -path '*/node_modules/*' -print0 |
