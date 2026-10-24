@@ -23,6 +23,23 @@
 
 The visual source of truth is [`design/yor-tokens.json`](./design/yor-tokens.json). Run `npm run design:check` after changing the dashboard surface.
 
+<!-- YOR REDLINE / EXPERIENCE V2 -->
+
+<a id="system-map"></a>
+## System map
+
+<div align="center"><picture><source media="(max-width: 600px)" srcset="docs/yor-redline-system-mobile.svg"/><img src="docs/yor-redline-system.svg" width="100%" alt="Civic records and accountability: Gather source records to Organize civic data to Explore comparisons to Inspect evidence links"/></picture></div>
+
+| Project signal | Documented scope |
+| :--- | :--- |
+| **Current maturity** | DEMO / EXPERIMENTAL |
+| **Technical focus** | Civic dashboards, seeded public-record views, comparisons, and evidence-first discussions. |
+| **Evidence boundary** | Seeded civic data and external-source assertions must be checked independently. |
+
+**Navigate:** [Current verification](#current-verification) · [Product surface](#product-surface) · [QUICK START (Root Folder)](#quick-start-root-folder) · [FULL FEATURE LIST](#full-feature-list) · [API REFERENCE](#api-reference) · [DATABASE TABLES (20)](#database-tables-20) · [TECH STACK](#tech-stack)
+
+<!-- END YOR REDLINE / EXPERIENCE V2 -->
+
 ## Current verification
 
 The repository build copies `frontend/` to `dist/`, then generates a seed database through the backend. A successful build proves packaging only; it does not prove live data freshness, moderation, legal-source quality, AI availability, or deployment health.
